@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  firstName     String?
+  lastName      String?
+  password      String
+  email         String?      @unique
+  unique_id     String?      @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  role          UserRole     @default(tutor)
+  tests         Test[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Test {
+  id                String       @id @default(cuid())
+  name              String
+  description       String?
+  subject           String
+  format            TestFormat
+  totalMarks        Int
+  durationMinutes   Int
+  students          StudentTest[]
+  numberOfQuestions Int
+  difficulty        Difficulty
+  published         Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  createdBy         User         @relation(fields: [createdById], references: [id])
+  createdById       String
+  visibility        Visibility
+  slug              String       @unique
+  settings          Json
+  questions         Question[]
+  @@index([createdById])
+}
+
+model Question {
+  qid           String       @unique
+  test          Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testId        String
+  text          String
+  type          QuestionType
+  options       Json
+  correctOption Int
+  correctAnswer String
+  marks         Int
+  explanation   String?
+}
+
+model StudentTest {
+  studentMatricNumber String    @map("studentMatricNumber")
+  testId              String    @map("testId")
+  studentSurname      String
+  test                Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  assignedAt          DateTime  @default(now())
+  score               Int?
+  @@id([studentMatricNumber, studentSurname ,testId])
+}
+
+enum TestFormat {
+  multiple_choice
+  theory
+  mixed
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum Visibility {
+  private
+  public
+}
+
+enum QuestionType {
+  multiple_choice
+  short_answer
+  essay
+  true_or_false
+}
+
+enum UserRole {
+  tutor
+  school
+}
