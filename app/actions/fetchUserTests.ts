@@ -8,6 +8,7 @@ export async function fetchTests(userId: string) {
     const tests = await prisma.test.findMany({
       orderBy: { createdAt: "desc" },
       where: { createdById: userId },
+      include: { questions: true },
     });
 
     return { tests };

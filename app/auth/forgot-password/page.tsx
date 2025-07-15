@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import VerificationCodeInput from '../components/VerificationCodeInput'
 import {Check} from "lucide-react"
+import animationData1 from "../public/lottie/check.json";
+
 
 
 export default function ForgotPasswordForm() {
@@ -85,13 +87,13 @@ export default function ForgotPasswordForm() {
 
   return (
     <div className="theme-bg min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-sm w-full space-y-6 bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
+      <div className="max-w-md w-full space-y-6 border theme-border p-8 rounded-lg shadow-sm">
         {/* Header */}
-        <h2 className="text-2xl font-semibold text-center text-gray-800">Forgot Password</h2>
+        <h2 className="text-2xl font-semibold text-center theme-text">Forgot Password</h2>
 
         {(submitted && !done) ? (
             <div>
-            <p className="text-sm text-center text-gray-500">We sent a 4-digit code to your email</p>
+            <p className="text-sm text-center theme-text">We sent a 4-digit code to your email</p>
 
             <VerificationCodeInput inputCode={inputCode} setInputCode={setInputCode} />
             <p
@@ -99,7 +101,7 @@ export default function ForgotPasswordForm() {
             className="text-xs text-blue-500 hover:underline mt-5 cursor-pointer">Change email?</p>
            {(count == 0) ?  <p
             onClick={handleResend}
-            className="text-xs mt-1 text-gray-500 hover:underline cursor-pointer">Did not get a code? Resend.</p>
+            className="text-xs mt-1 theme-text hover:underline cursor-pointer">Did not get a code? Resend.</p>
             :
             <div className="flex gap-2 items-center mt-1">
             <span className="loading loading-bars loading-xs"></span>
@@ -108,7 +110,7 @@ export default function ForgotPasswordForm() {
           }
           <label className="w-full rounded p-1">
             <p className="text-sm">New Password</p>
-            <input type="password" className="border-gray-300 border-2 w-full rounded p-1 focus:ring-2 focus:ring-blue-500 focus:outline-none" type="text" value={password} onChange={(e) => setPassword(e.target.value)}/>
+            <input type="password" className="theme-border border-2 w-full rounded p-1 focus:outline-none" type="text" value={password} onChange={(e) => setPassword(e.target.value)}/>
             </label>
             {error &&  <p className="mt-3 w-full text-xs text-center rounded p-3 bg-red-500 line-clamp-2 text-white">{error}</p>}
             <button
@@ -120,13 +122,13 @@ export default function ForgotPasswordForm() {
         ) :  (!submitted && !done) ? (
           <form onSubmit={handleReset} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium theme-text mb-1">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                className="w-full px-3 py-2 border theme-border rounded-md  focus:outline-none text-sm"
               />
             </div>
             {error &&  <p className="mt-1 w-full text-xs text-center rounded p-3 bg-red-500 line-clamp-2 text-white">{error}</p>}
@@ -140,7 +142,9 @@ export default function ForgotPasswordForm() {
             </button>
           </form>
         ) : (
-          <Check className="w-24 h-24 stroke-white bg-green-500 rounded-full mx-auto animate-pulse mt-1"/>
+          <div className="w-100 mx-auto">
+          <Lottie animationData={animationData} loop={true} autoplay={true} />
+          </div>
         )}
 
         <div className="w-fit mx-auto pt-2">

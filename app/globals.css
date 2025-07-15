@@ -91,9 +91,20 @@ input:-webkit-autofill {
   -webkit-text-fill-color: var(--text) !important;
 }
 
+
 .theme-bg {
   background-color: var(--bg);
 }
+
+.brand-bg {
+  background-color: #0d52bf;
+}
+
+.brand-text {
+  color: #1881cc;
+}
+
+
 
 .opp-text {
   color: var(--bg);
@@ -116,6 +127,7 @@ input:-webkit-autofill {
 .dark .theme-bg-subtle {
   background-color: rgba(255, 255, 255, 0.05);
 }
+
 
 /* Toggle switch */
 .toggle {

@@ -36,6 +36,7 @@ export default function TestList() {
         const result = await fetchTests(session.user.id);
         if ("error" in result) throw new Error(result.error);
         setTests(result.tests || []);
+        console.log(result.tests)
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -55,9 +56,9 @@ export default function TestList() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "easy": return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-      case "medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
-      case "hard": return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      case "easy": return "dark:bg-green-400 dark:text-green-400 theme-text";
+      case "medium": return "dark:bg-yellow-400 dark:text-yellow-400 theme-text";
+      case "hard": return "dark:bg-red-400 dark:text-red-400 theme-text";
       default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
     }
   };
@@ -217,16 +218,16 @@ export default function TestList() {
                     </span>
                   </div>
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 brand-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
                 {/* Content */}
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-lg font-semibold  mb-2 group-hover:text-blue-600 dark:group-hover:brand-text transition-colors">
                   {test.name}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+                <p className= " opacity-70 mb-4 text-sm">
                   {test.subject}
                 </p>
                 {/* Stats */}
@@ -258,8 +259,8 @@ export default function TestList() {
                 <div className="flex items-center justify-between">
                   <span className={`text-xs px-2 py-1 border theme-border rounded-full ${
                     test.visibility === 'public'
-                      ? 'bg-green-300 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                      : 'bg-gray-300 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400'
+                      ? 'bg-green-500 opp-text '
+                      : 'brand-bg opp-text'
                   }`}>
                     {test.visibility}
                   </span>

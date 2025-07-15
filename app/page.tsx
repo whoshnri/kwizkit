@@ -271,7 +271,7 @@ export default function HomePage() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         variants={sectionVariants}
-        className="py-20 px-6 bg-black min-h-screen"
+        className="py-20 px-6 min-h-screen"
       >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -279,7 +279,7 @@ export default function HomePage() {
               A Comprehensive Toolkit
               <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">For Modern Educators</span>
             </h2>
-            <p className="text-xl text-white opacity-70 max-w-3xl mx-auto">
+            <p className="text-xl theme-text opacity-70 max-w-3xl mx-auto">
               Everything you need to create, distribute, and analyze assessments efficiently.
             </p>
           </div>
@@ -305,7 +305,7 @@ export default function HomePage() {
             </span>
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Meet KkAI, The Brains Behind Your Brilliance</h2>
             <p className="text-xl opacity-70 mb-8">
-              Our proprietary AI is more than just a question generator. It's a smart assistant that understands educational context, ensures quality, and provides deep insights to help you teach better.
+              Our proprietary AI is more than just a question generator. It&apos;s a smart assistant that understands educational context, ensures quality, and provides deep insights to help you teach better.
             </p>
             <ul className="space-y-4 mb-8">
               <li className="flex items-start gap-3"><Sparkles className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" /><span><strong>Adaptive Generation:</strong> Creates questions that match your specific curriculum and difficulty levels.</span></li>
@@ -342,7 +342,7 @@ export default function HomePage() {
       className="py-20  px-6"
     >
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             From Concept to Classroom in Minutes
           </h2>
@@ -351,21 +351,22 @@ export default function HomePage() {
           </p>
         </div>
 
-        <ul className="timeline timeline-vertical lg:timeline-horizontal z-20 w-full scrollbar-hide mx-auto overflow-x-auto">
+        <ul className="timeline timeline-vertical lg:timeline-horizontal z-20 w-full scrollbar-hide mx-auto overflow-x-auto pb-12">
           {howItWorksSteps.map((step, index) => (
             <motion.li key={index} variants={cardVariants}>
-              {index !== 0 && <hr />}
+              {index !== 0 && <hr className="brand-bg" />}
               <div className="timeline-start font-bold">Step {index + 1}</div>
               <div className="timeline-middle">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center">
                   {step.icon}
                 </div>
               </div>
-              <div className="timeline-end hover:scale-110 duration-300 hover:z-30 hover:-translate-y-1 timeline-box p-5 theme-bg border-none text-center shadow-md ">
+
+              <div className="timeline-end border-2 theme-border theme-bg-subtle hover:shadow-lg hover:scale-110 duration-300 hover:z-30 hover:-translate-y-1 timeline-box p-5 text-center shadow-md hover:opacity-100 ">
                 <h3 className="text-lg font-semibold mb-1">{step.title}</h3>
                 <p className="text-sm ">{step.description}</p>
               </div>
-              {index !== howItWorksSteps.length - 1 && <hr />}
+              {index !== howItWorksSteps.length - 1 && <hr className="brand-bg"/>}
             </motion.li>
           ))}
         </ul>
@@ -392,7 +393,7 @@ export default function HomePage() {
       >
         {/* Globe BG: right-aligned, half-visible */}
         <div className="absolute left-[50%] -translate-x-[50%] h-[1000px] bottom-[-40rem] w-[80%] hidden md:block z-0">
-          <World data={sampleArcs} globeConfig={globeConfig} />
+          {/*<World data={sampleArcs} globeConfig={globeConfig} />*/}
         </div>
 
         {/* Content: centered on top of globe */}

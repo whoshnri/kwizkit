@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { useSession } from 'next-auth/react';
 import { MoreVertical } from "lucide-react";
+import animationData1 from "@/public/lottie/login.json";
+import animationData2 from "@/public/lottie/signup.json";
+import Lottie from "lottie-react";
+
+
 
 
 
@@ -165,35 +170,41 @@ export default function LoginForm() {
 
   return (
     <div className="theme-bg min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-sm w-full space-y-6 bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
+      <div  className="flex border theme-border gap-2 rounded ">
+        <div className="w-150 h-150 transition-all duration-200">
+          {loginPage ? <Lottie animationData={animationData2} loop={true} autoplay={true} />  :
+          <Lottie animationData={animationData1} loop={true} autoplay={true} />
+        }
+          </div>
+      <div className="max-w-md shadow-lg w-full space-y-6 p-6 shadow-sm">
 
       { loginPage ?
         (<div>
-        <h2 className="text-2xl font-semibold text-center text-gray-800">Login</h2>
+        <h2 className="text-2xl font-semibold text-center theme-text">Login</h2>
 
         {/* Email/Password Form */}
         <div className="space-y-4 mt-5">
             {successMessage && <p className="w-full text-xs text-center rounded p-3 bg-green-500 text-white">{successMessage}</p>}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium opacity-70 theme-text mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+              className="w-full px-3 py-2 border theme-border rounded-md focus:outline-none text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium opacity-70 theme-text mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+              className="w-full px-3 py-2 border theme-border rounded-md focus:outline-none text-sm"
             />
           </div>
             {errorMessage && <p className="w-full text-xs text-center rounded p-3 bg-red-500 line-clamp-2 text-white">{errorMessage}</p>}
@@ -218,7 +229,7 @@ export default function LoginForm() {
         </div>)
          :
           (<div>
-              <h2 className="text-2xl font-semibold text-center text-gray-800">Sign Up</h2>
+              <h2 className="text-2xl font-semibold text-center theme-text">Sign Up</h2>
 
               {/* Email/Password Form */}
               <div className="space-y-4 mt-5">
@@ -226,48 +237,48 @@ export default function LoginForm() {
               <div className="flex gap-3 justify-between">
               <div>
 
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fistname</label>
+                  <label className="block text-sm font-medium opacity-70 theme-text mb-1">Fistname</label>
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="FirstName"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border theme-border rounded-md focus:outline-none text-sm"
                   />
               </div>
 
               <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Lastname</label>
+                  <label className="block text-sm font-medium opacity-70 theme-text mb-1">Lastname</label>
                   <input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Lastname"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border theme-border rounded-md focus:outline-none text-sm"
                   />
                 </div>
                 </div>
 
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium opacity-70 theme-text mb-1">Email</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border theme-border rounded-md focus:outline-none text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium theme-text opacity-70 mb-1">Password</label>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                    className="w-full px-3 py-2 border theme-border rounded-md focus:outline-none text-sm"
                   />
                 </div>
                   {errorMessage && <p className="w-full text-xs text-center rounded p-3 bg-red-500 text-white">{errorMessage}</p>}
@@ -290,9 +301,9 @@ export default function LoginForm() {
       }
         {/* Divider */}
         <div className="flex items-center gap-4 py-2">
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="text-sm text-gray-500 font-medium">or</span>
-          <div className="flex-1 h-px bg-gray-300"></div>
+          <div className="flex-1 h-px theme-bg-subtle"></div>
+          <span className="text-sm theme-text font-medium">or</span>
+          <div className="flex-1 h-px theme-bg-subtle"></div>
         </div>
 
         {/* Social Login */}
@@ -300,7 +311,7 @@ export default function LoginForm() {
           {oErrorMessage && <p className="w-full p-3 bg-red-500 text-white">{oErrorMessage}</p>}
           <button
             onClick={handleGithubSignin}
-            className="relative z-0 w-full flex items-center gap-3 justify-center border border-gray-300 bg-white text-gray-700 py-2.5 px-4 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+            className="relative z-0 w-full flex items-center gap-3 justify-center border theme-border brand-bg text-white text-gray-700 py-2.5 px-4 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
               hover:bg-gray-300 group cursor-pointer"
           >
 
@@ -372,6 +383,7 @@ export default function LoginForm() {
           > Logout? </p >}
         </div>
       </div>
+    </div>
     </div>
   );
 }

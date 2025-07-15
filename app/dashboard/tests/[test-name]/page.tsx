@@ -74,9 +74,9 @@ const TestMaker = () => {
         const res = await fetch(`/api/test?testId=${testId}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch test');
-        // Set both the original and editable state
         setTest(data.test);
         setNewTest(data.test);
+        console.log(data.test)
       } catch (err: any) {
         console.error('[FETCH_TEST_ERROR]', err);
         setError(err.message);
@@ -215,9 +215,11 @@ const TestMaker = () => {
 
   return (
     <>
+    { newTest &&
       <div className="h-full flex flex-row gap-6 p-4 md:p-6">
         {/* Main Content Area */}
         <main className="flex-grow h-full overflow-y-auto pr-2 space-y-6">
+
           <EditTestForm newTest={newTest} setNewTest={setNewTest} />
           <BuilderPage
             newTest={newTest}
@@ -232,7 +234,9 @@ const TestMaker = () => {
           onSelectQuestion={handleModalOpen}
           onAddNew={() => handleModalOpen(null)}
         />
-      </div>
+        </div>
+      }
+
 
       {/* Floating Action Bar */}
       <FloatingSaveBar
@@ -402,7 +406,7 @@ function FloatingSaveBar({ isVisible, onSave, onDiscard, saving }: {
 
   return (
     <div className="fixed bottom-0 left-0 right-0  z-40 animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="container mx-auto p-4 w-[40%]">
+      <div className="container mx-auto p-4 w-[60%]">
         <div className="theme-bg theme-border border rounded-lg shadow-2xl p-4 flex justify-between items-center">
           <p className="font-medium text-sm md:text-base">You have unsaved changes.</p>
           <div className="flex items-center gap-3">

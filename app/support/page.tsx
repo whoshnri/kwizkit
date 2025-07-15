@@ -57,7 +57,7 @@ export default function SupportPage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             How Can We <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Help?</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl theme-text opacity-80 max-w-2xl mx-auto">
             Get the support you need to make the most of KwizKit.
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function SupportPage() {
             href="#contact-form"
             onClick={handleScrollToContact}
             whileHover={{ y: -5, scale: 1.02 }}
-            className="block bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-transparent hover:shadow-blue-500/10 transition-shadow duration-300"
+            className="block brand-bg backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-transparent hover:shadow-blue-500/10 transition-shadow duration-300"
           >
             <div className="flex items-start gap-4 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
@@ -83,10 +83,10 @@ export default function SupportPage() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold">Email Support</h3>
-                <p className="text-gray-600 dark:text-gray-400">Response within 24 hours</p>
+                <p className="opp-text opacity-80">Response within 24 hours</p>
               </div>
             </div>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="opp-text dark:text-gray-300">
               Best for detailed questions. Send us your inquiry and we'll provide a thorough response.
             </p>
           </motion.a>
@@ -94,7 +94,7 @@ export default function SupportPage() {
           {/* Live Chat Card */}
           <motion.div
             whileHover={{ y: -5, scale: 1.02 }}
-            className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-transparent hover:shadow-blue-500/10 transition-shadow duration-300"
+            className="theme-bg backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-transparent hover:shadow-blue-500/10 transition-shadow duration-300"
           >
             <div className="flex items-start gap-4 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
@@ -105,7 +105,7 @@ export default function SupportPage() {
                 <p className="text-gray-600 dark:text-gray-400">Available during business hours</p>
               </div>
             </div>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="theme-text">
               Get instant help for quick questions from our support team.
             </p>
           </motion.div>
@@ -118,7 +118,7 @@ export default function SupportPage() {
           viewport={{ once: true, amount: 0.2 }}
           variants={sectionVariants}
           custom={3}
-          className="bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-8 md:p-12 mb-16 border border-gray-200/50 dark:border-gray-700/50"
+          className="rounded-2xl p-8 md:p-12 mb-16 border border-gray-200/50 dark:border-gray-700/50"
         >
           <div className="flex items-center gap-4 mb-8">
             <HelpCircle className="text-blue-600" size={32} />
@@ -130,7 +130,7 @@ export default function SupportPage() {
               <Disclosure key={i} as="div" className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
                 {({ open }) => (
                   <>
-                    <Disclosure.Button className="flex w-full justify-between items-center py-4 text-left text-lg font-medium theme-text hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <Disclosure.Button className="flex w-full justify-between items-center py-4 text-left text-lg font-semibold theme-text transition-colors">
                       <span>{item.question}</span>
                       <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }}>
                         <ChevronDown className="h-5 w-5" />
@@ -145,7 +145,7 @@ export default function SupportPage() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.3, ease: "easeOut" }}
-                          className="pb-4 pr-4 text-gray-600 dark:text-gray-300"
+                          className="pb-4 pr-4 theme-text opacity-70"
                         >
                           {item.answer}
                         </Disclosure.Panel>
@@ -166,7 +166,7 @@ export default function SupportPage() {
           viewport={{ once: true, amount: 0.2 }}
           variants={sectionVariants}
           custom={4}
-          className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-gray-200/50 dark:border-gray-700/50 shadow-xl shadow-blue-500/5"
+          className="backdrop-blur-sm rounded-2xl p-8 md:p-12 border theme-border shadow-xl shadow-blue-500/5"
         >
           <h2 className="text-2xl md:text-3xl font-semibold mb-6">Send Us a Message</h2>
           <form className="space-y-6">
@@ -174,23 +174,23 @@ export default function SupportPage() {
               <input
                 type="text"
                 placeholder="Your Name"
-                className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
               <input
                 type="email"
                 placeholder="Your Email"
-                className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
             </div>
             <input
               type="text"
               placeholder="Subject"
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
             <textarea
               placeholder="Your Message"
               rows={5}
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             ></textarea>
             <motion.button
               whileHover={{ scale: 1.03 }}
@@ -210,10 +210,10 @@ export default function SupportPage() {
           viewport={{ once: true, amount: 0.8 }}
           variants={sectionVariants}
           custom={5}
-          className="mt-12 p-4 bg-blue-100/50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center gap-3 text-center"
+          className="mt-12 p-4 brand-bg rounded-lg flex items-center justify-center gap-3 text-center"
         >
-          <Clock className="text-blue-600 dark:text-blue-300" size={20} />
-          <p className="text-blue-800 dark:text-blue-200">
+          <Clock className="text-white" size={20} />
+          <p className="text-white">
             <strong>Support Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM EST
           </p>
         </motion.div>

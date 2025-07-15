@@ -46,7 +46,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-
     const {
       name,
       subject,
@@ -156,7 +155,6 @@ export async function DELETE(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log(body)
     const {
       id,
       name,
@@ -235,7 +233,7 @@ export async function PATCH(req: NextRequest) {
           } = q;
 
           // Validation (skip invalid)
-          if (!text || !type || marks === undefined || !correctAnswer) continue;
+          if (!text || !type || marks === undefined) continue;
           if (type === 'multiple_choice' && options.length < 2) continue;
 
           // Check if a question with this qid exists

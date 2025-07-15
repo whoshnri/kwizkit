@@ -168,8 +168,8 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="bg-white dark:bg-gray-900 rounded shadow-lg w-full max-w-2xl h-[80vh] flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center theme-bg-subtle">
+        <div className="theme-bg rounded shadow-lg w-full max-w-2xl h-[80vh] flex items-center justify-center">
           <span className="loading loading-bars loading-xl" />
         </div>
       </div>
@@ -178,22 +178,22 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-gray-900 rounded shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+      <div className="theme-bg theme-text rounded shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-black dark:text-white">Test Settings</h2>
-            <button onClick={() => setShowSettingsModal(false)} type="button" className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5">
-              <X className="w-5 h-5 text-black dark:text-white" />
+            <h2 className="text-lg font-bold ">Test Settings</h2>
+            <button onClick={() => setShowSettingsModal(false)} type="button" className="p-2 rounded-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/5">
+              <X className="w-5 h-5 " />
             </button>
           </div>
 
           {/* General Settings */}
           <div>
-            <h3 className="text-md font-semibold text-black dark:text-white mb-2">General Settings</h3>
+            <h3 className="text-md font-semibold mb-2">General Settings</h3>
             <div className="space-y-2">
               {Object.entries(settings.general).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm text-black dark:text-white capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
+                  <span className="text-sm capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
                   <SettingSwitch
                     section="general"
                     keyName={key}
@@ -212,11 +212,11 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
           {/* Security Settings */}
           <div>
-            <h3 className="text-md font-semibold text-black dark:text-white mb-2">Security Settings</h3>
+            <h3 className="text-md font-semibold mb-2">Security Settings</h3>
             <div className="space-y-2">
               {Object.entries(settings.security).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm text-black dark:text-white capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
+                  <span className="text-sm capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
                   <SettingSwitch
                     section="security"
                     keyName={key}
@@ -235,8 +235,8 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
           {/* Upload Users */}
           <div>
-            <h3 className="text-md font-semibold text-black dark:text-white">Users</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Upload student list for this test</p>
+            <h3 className="text-md font-semibold ">Users</h3>
+            <p className="text-xs mb-2">Upload student list for this test</p>
 
             <div className="flex gap-4 mb-4">
               {["file", "url"].map((type) => (
@@ -270,8 +270,8 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
                   if (file) setSelectedFile(file);
                 }}
               >
-                <Upload className="w-8 h-8 mx-auto mb-2 text-black dark:text-white" />
-                <p className="text-sm text-black dark:text-white">Drag and drop student list</p>
+                <Upload className="w-8 h-8 mx-auto mb-2 " />
+                <p className="text-sm ">Drag and drop student list</p>
                 <p className="text-xs text-gray-500">Supported: .csv, .xlsx</p>
                 <input
                   type="file"
@@ -283,7 +283,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+                  className="mt-4 bg-blue-600 cursor-pointer text-white px-4 py-2 rounded"
                 >
                   Select File
                 </button>
@@ -294,7 +294,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
               <div className="mt-4 p-4 border border-gray-300 rounded bg-gray-50 dark:bg-gray-800">
                 <div className="flex items-center gap-2">
                   <File className="w-5 h-5 text-black dark:text-white" />
-                  <p className="text-sm text-black dark:text-white">
+                  <p className="text-sm ">
                     Selected file: {selectedFile.name}
                   </p>
                 </div>
@@ -310,12 +310,12 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
               </div>
             )}
 
-            {processingStatus === "processing" && <p className="mt-2 text-sm text-black dark:text-white">Uploading...</p>}
+            {processingStatus === "processing" && <p className="mt-2 text-sm ">Uploading...</p>}
             {processingStatus === "complete" && <p className="mt-2 text-sm text-green-600">Upload complete!</p>}
             {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
 
             {settings.users.usersAdded && (
-              <div className="mt-4 text-sm text-black dark:text-white">
+              <div className="mt-4 text-sm ">
                 Users have already been uploaded for this test.
               </div>
             )}
@@ -337,7 +337,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
                     } inline-block h-4 w-4 transform bg-white rounded-full transition`}
                   />
                 </Switch>
-                <span className="text-sm font-medium text-black dark:text-white">Publish Test</span>
+                <span className="text-sm font-medium">Publish Test</span>
               </label>
               <button
                 type="submit"

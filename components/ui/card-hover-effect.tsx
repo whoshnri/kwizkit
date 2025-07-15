@@ -27,14 +27,14 @@ export const HoverEffect = ({
         <a
           href={item?.link}
           key={idx}
-          className="relative group cursor-pointer block p-2 h-full w-full"
+          className="relative group cursor-pointer block p-2 h-full text w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <AnimatePresence>
             {hoveredIndex === idx && (
               <motion.span
-                className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block  rounded-md"
+                className="absolute inset-0 h-full opacity-200 w-full theme-bg-subtle block  rounded-md"
                 layoutId="hoverBackground"
                 initial={{ opacity: 0 }}
                 animate={{
@@ -49,7 +49,7 @@ export const HoverEffect = ({
             )}
           </AnimatePresence>
           <Card>
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded flex items-center justify-center mb-5">{item.icon}</div>
+            <div className="w-12 h-12 theme-bg rounded-full flex items-center justify-center mb-5">{item.icon}</div>
             <CardTitle>{item.title}</CardTitle>
             <CardDescription>{item.description}</CardDescription>
           </Card>
@@ -69,7 +69,7 @@ export const Card = ({
   return (
     <div
       className={cn(
-        "rounded-2xl h-full w-full p-4 overflow-hidden bg-slate-950 border border-transparent dark:border-white/[0.2] group-hover:border-slate-700 relative z-20",
+        "rounded-2xl h-full w-full shadow-lg  brand-bg p-4 overflow-hidden theme-bg  relative z-20",
         className
       )}
     >

@@ -135,12 +135,12 @@ export default function PrivacyPolicyPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-gray-200/50 dark:border-gray-700/50 space-y-10"
+          className="backdrop-blur-sm rounded-2xl p-8 md:p-12 border theme-border space-y-10"
         >
           {policySections.map((section) => (
             <motion.section key={section.title} variants={itemVariants}>
               <div className="flex items-center gap-4 mb-4">
-                <div className="text-blue-600 dark:text-blue-400">{section.icon}</div>
+                <div className="brand-text dark:text-blue-400">{section.icon}</div>
                 <h2 className="text-2xl font-semibold theme-text">{section.title}</h2>
               </div>
               <div className="prose prose-gray dark:prose-invert max-w-none prose-a:text-blue-600 hover:prose-a:text-blue-500 dark:prose-a:text-blue-400 dark:hover:prose-a:text-blue-300 prose-ul:list-disc prose-ul:pl-6 prose-li:my-1">

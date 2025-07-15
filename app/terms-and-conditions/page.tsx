@@ -164,28 +164,36 @@ export default function App() {
       ),
     },
   ];
+  const lastUpdated = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-inter text-gray-800 dark:text-gray-200">
-      {/* Sticky, Minimalistic Banner */}
-      <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="max-w-4xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-0">Terms and Conditions</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-      </header>
+    <div className="min-h-screen theme-bg font-inter theme-text">
+
 
       <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8">
-          <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+        <div className="mb-12 text-center">
+          <h1
+            className="text-4xl md:text-5xl font-bold mb-4"
+          >
+            Terms <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">&amp;</span> Conditions
+          </h1>
+          <p className="">Last updated: {lastUpdated}</p>
+        </div>
+
+        <div className="rounded-2xl shadow-xl overflow-hidden p-6 sm:p-8">
+          <p className="theme-text opacity-70 dark:text-gray-300 mb-6 leading-relaxed">
             Welcome to KwizKit! Please read these Terms and Conditions carefully before using our service. By accessing or using KwizKit, you agree to be bound by these terms.
           </p>
 
           <div className="space-y-4">
             {sections.map((section) => (
-              <div key={section.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div key={section.id} className="border theme-border rounded-lg overflow-hidden">
                 <button
-                  className="flex justify-between items-center w-full p-4 text-left font-semibold text-lg text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex justify-between items-center w-full p-4 text-left font-semibold text-lg transition-colors duration-300 focus:outline-none border-b theme-border"
                   onClick={() => toggleSection(section.id)}
                   aria-expanded={openSection === section.id}
                   aria-controls={`content-${section.id}`}
@@ -207,7 +215,7 @@ export default function App() {
                   id={`content-${section.id}`}
                   className={`overflow-hidden transition-all duration-500 ease-in-out ${
                     openSection === section.id ? 'max-h-screen p-4' : 'max-h-0'
-                  } text-gray-700 dark:text-gray-300`}
+                  } theme-text opacity-80`}
                 >
                   {section.content}
                 </div>

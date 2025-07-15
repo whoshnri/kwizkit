@@ -33,10 +33,10 @@ export default function Navbar({ session }: NavProps) {
       <div className={`flex flex-col h-full py-6  px-3`}>
         {/* Header */}
         <div className={`flex items-center ${show ? "justify-between" : "justify-center"} mb-6`}>
-          {show && <span className="text-lg font-semibold text-gray-900 dark:text-white">Menu</span>}
+          {show && <span className="text-lg font-semibold theme-text">Menu</span>}
           <button
             onClick={toggleDrawer}
-            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full"
+            className="theme-text hover:text-gray-900 dark:hover:text-white focus:outline-none rounded-full"
             aria-label={show ? "Collapse menu" : "Expand menu"}
           >
             <Menu className="h-5 w-5" />
@@ -49,7 +49,7 @@ export default function Navbar({ session }: NavProps) {
             <Link
               href={item.href}
               key={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/50 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 ${show ? "gap-3" : "justify-center"} focus:ring-blue-500 transition duration-200`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg theme-text focus:outline-none focus:ring-2 ${show ? "gap-3" : "justify-center"} focus:ring-blue-500 transition duration-200`}
             >
               <item.icon className="h-5 w-5 flex-shrink-0" />
               {show && <span className="text-sm font-medium">{item.label}</span>}

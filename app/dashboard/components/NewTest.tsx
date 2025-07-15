@@ -52,6 +52,7 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create test");
       setNewTest(false)
+      window.location.reload()
     } catch (err: any) {
       setError(err.message);
     } finally {
