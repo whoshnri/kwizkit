@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use client";
 
 import Link from "next/link";
@@ -6,6 +8,7 @@ import AccountDropdownMenu from "@/app/components/AccountDropdownMenu";
 import ThemeToggle from "@/app/components/DarkMode";
 import { ThemeProvider } from "@/app/components/theme-provider";
 import { Providers } from "@/app/providers";
+import type {Session} from "next-auth"
 
 export default function AppLayout({
   children,

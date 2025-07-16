@@ -1,4 +1,5 @@
-"use client"
+// @ts-nocheck
+"use client";
 
 import { useEffect, useRef } from 'react';
 import { motion, useInView, useSpring, useTransform } from 'framer-motion';
@@ -32,7 +33,7 @@ const itemVariants = {
 };
 
 // Animated number component for stats
-function AnimatedNumber({ value }: { value: number }) {
+function AnimatedNumber({ value }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 

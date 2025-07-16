@@ -1,5 +1,6 @@
 "use server";
 import { PrismaClient } from "@prisma/client";
+import type {Settings} from '../../lib/setting'
 
 const prisma = new PrismaClient();
 

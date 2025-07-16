@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Dialog } from "@headlessui/react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, easeIn, easeOut } from "framer-motion"
 import { X, Check, CreditCard, User, Mail } from "lucide-react"
 import { Plan, BillingCycle } from "@/lib/index"
 
@@ -25,7 +25,7 @@ export default function CheckoutModal({ plan, billingCycle, onClose }: CheckoutM
       scale: 1,
       transition: {
         duration: 0.3,
-        ease: "easeOut",
+        ease: easeOut,
       },
     },
     exit: {
@@ -33,7 +33,7 @@ export default function CheckoutModal({ plan, billingCycle, onClose }: CheckoutM
       scale: 0.95,
       transition: {
         duration: 0.2,
-        ease: "easeIn",
+        ease: easeIn,
       },
     },
   }
@@ -46,12 +46,12 @@ export default function CheckoutModal({ plan, billingCycle, onClose }: CheckoutM
     center: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.3, ease: 'easeOut' }
+      transition: { duration: 0.3, ease: easeOut }
     },
     exit: (direction: number) => ({
       x: direction < 0 ? '100%' : '-100%',
       opacity: 0,
-      transition: { duration: 0.3, ease: 'easeIn' }
+      transition: { duration: 0.3, ease: easeIn }
     })
   };
 

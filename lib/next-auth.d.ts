@@ -3,16 +3,15 @@ import { DefaultSession, DefaultUser } from "next-auth";
 // Extend the built-in session and user types
 declare module "next-auth" {
   /**
-   * The shape of the user object returned in the OAuth providers' `profile` callback,
-   * or the database user object.
+   * Extend the User object
    */
   interface User extends DefaultUser {
-    // Add your custom properties here:
     firstName?: string | null;
+    provider?: string; // ✅ Add this line
   }
 
   /**
-   * The shape of the session object returned by `useSession`, `getSession` and `getServerSession`.
+   * Extend the Session object
    */
   interface Session extends DefaultSession {
     user: User;

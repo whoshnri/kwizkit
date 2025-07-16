@@ -27,7 +27,7 @@ export default function FAQ() {
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
         <p className="text-lg theme-text-secondary mt-2">
-          Have questions? We've got answers.
+          Have questions? We&apos;ve got answers.
         </p>
       </div>
       <div className="space-y-4">

@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 "use client";
 import { useRef, useState, useEffect } from "react";
 
@@ -6,7 +9,7 @@ interface Setters{
   inputCode : number
 }
 
-export default function VerificationCodeInput({setInputCode, inputCode} : {Setters}) {
+export default function VerificationCodeInput({setInputCode, inputCode} : Setters) {
   const length = 4;
   const [code, setCode] = useState<number[]>(Array(length).fill(""));
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);

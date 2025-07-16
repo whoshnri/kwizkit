@@ -1,4 +1,6 @@
-export interface Settings {
+
+
+export type Settings = {
   general: {
     shuffleQuestions: boolean; // Shuffle question order
     allowRetake: boolean; // Allow students to retake the test
@@ -10,6 +12,6 @@ export interface Settings {
   };
   users: {
     usersAdded: boolean;
-    uploadedFiles = [];
+    uploadedFiles : any[];
   };
 }

@@ -1,6 +1,7 @@
 // app/api/tests/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import type {Question} from "@/lib/question"
 
 const prisma = new PrismaClient()
 
@@ -204,9 +205,9 @@ export async function PATCH(req: NextRequest) {
     });
 
             // --- Sync Questions ---
-        const existingQuestions = existingTest.questions;
-        const existingQids = existingQuestions.map((q) => q.qid);
-        const updatedQids = questions.map((q: any) => q.qid).filter(Boolean);
+         const existingQuestions = existingTest.questions as unknown as Question[];
+          const existingQids = existingQuestions.map((q: Question) => q.qid);
+        const updatedQids = questions.map((q : Question) => q.qid).filter(Boolean);
 
         // Delete removed questions
         const idsToDelete = existingQids.filter((qid) => !updatedQids.includes(qid));

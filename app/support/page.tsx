@@ -1,7 +1,7 @@
 "use client"
 
 import { Fragment } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, easeOut } from "framer-motion"
 import { Disclosure } from "@headlessui/react"
 import { Mail, MessageCircle, HelpCircle, Clock, ChevronDown, Send } from "lucide-react"
 
@@ -14,7 +14,7 @@ const sectionVariants = {
     transition: {
       delay: i * 0.15,
       duration: 0.6,
-      ease: "easeOut",
+      ease: easeOut,
     },
   }),
 }
@@ -39,7 +39,7 @@ const faqItems = [
 ]
 
 export default function SupportPage() {
-  const handleScrollToContact = (e) => {
+  const handleScrollToContact = (e:React.FormEvent) => {
     e.preventDefault();
     document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -87,7 +87,7 @@ export default function SupportPage() {
               </div>
             </div>
             <p className="opp-text dark:text-gray-300">
-              Best for detailed questions. Send us your inquiry and we'll provide a thorough response.
+              Best for detailed questions. Send us your inquiry and we&apos;ll provide a thorough response.
             </p>
           </motion.a>
 
@@ -140,14 +140,18 @@ export default function SupportPage() {
                       {open && (
                         <Disclosure.Panel
                           static
-                          as={motion.div}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
-                          className="pb-4 pr-4 theme-text opacity-70"
+                          as="div" // Just render a normal div
+                          className="overflow-hidden"
                         >
-                          {item.answer}
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3, ease: easeOut }}
+                            className="pb-4 pr-4 theme-text opacity-70"
+                          >
+                            {item.answer}
+                          </motion.div>
                         </Disclosure.Panel>
                       )}
                     </AnimatePresence>

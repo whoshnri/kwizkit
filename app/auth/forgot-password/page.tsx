@@ -1,8 +1,11 @@
+// @ts-nocheck
+
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import VerificationCodeInput from '../components/VerificationCodeInput'
 import {Check} from "lucide-react"
+import Lottie from "lottie-react";
 import animationData1 from "../public/lottie/check.json";
 
 

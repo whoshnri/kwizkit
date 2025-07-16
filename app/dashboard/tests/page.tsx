@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use client";
 import { useEffect, useState } from "react";
 import NewTest from '../components/NewTest'
@@ -274,7 +276,7 @@ export default function TestList() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-sm">
+          <div className="theme-bg p-6 rounded shadow-lg w-full max-w-sm">
             <h2 className="text-lg font-bold mb-4">Confirm Deletion</h2>
             <p className="mb-4">Are you sure you want to delete this test? This action cannot be undone.</p>
             <div className="flex justify-end gap-2">

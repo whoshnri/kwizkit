@@ -4,7 +4,7 @@ import { Session } from "next-auth";
 import { useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { Home, PlusCircle, BookOpen, BarChart2, Settings, Menu, LogOut } from "lucide-react";
+import { Home, BookOpen, BarChart2, Settings, Menu} from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
@@ -73,7 +73,7 @@ export default function Navbar({ session }: NavProps) {
             )}
             {show && (
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                <p className="text-sm font-medium theme-text dark:text-white">
                   Signed in as {session.user.firstName}
                 </p>
                 <button

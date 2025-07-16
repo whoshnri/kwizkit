@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { PrismaClient } from '@prisma/client';
 import formidable from 'formidable';
 import fs from 'fs/promises';

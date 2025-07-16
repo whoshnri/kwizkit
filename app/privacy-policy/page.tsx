@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { Shield, Database, BookOpen, Clock, Mail, Info, FileText } from "lucide-react"
+import { motion, easeOut } from "framer-motion"
+import { Shield, Database, BookOpen, Clock, Mail, Info} from "lucide-react"
 
 // Framer Motion Variants
 const containerVariants = {
@@ -21,7 +21,7 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: easeOut,
     },
   },
 }
@@ -80,7 +80,7 @@ const policySections = [
     content: (
       <p>
         KwizKit is committed to protecting student privacy and complies with the Family Educational Rights and
-        Privacy Act (FERPA). We act as a "school official" with a "legitimate educational interest" under FERPA.
+        Privacy Act (FERPA). We act as a &quot;school official&quot; with a &quot;legitimate educational interest&quot; under FERPA.
         We do not sell student data and only use it to provide educational services as directed by you, the educator.
       </p>
     ),

@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "./components/Navbar";
 import Header from "./components/Header";
+import type { AuthOptions } from "next-auth";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions as AuthOptions);
 
   if (!session) {
     redirect("/auth/authorize");

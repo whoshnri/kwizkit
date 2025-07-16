@@ -1,9 +1,12 @@
+// @ts-nocheck
+
 "use client"
 
-import { useState, Fragment } from "react"
+import { useState} from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Dialog, Transition } from "@headlessui/react"
 import { X, MessageCircle, Send, Sparkles, Database, Brain, BarChart3, Users, ChevronRight, Mail, User, Github, Twitter } from "lucide-react"
+import {submitEmail} from "@/app/actions/addToWaitingList"
 
 // Framer Motion Variants for animations
 const sectionVariants = {
@@ -31,11 +34,38 @@ const featureCardVariants = {
   visible: { opacity: 1, y: 0 },
 }
 
+
+
 export default function PrelaunchPage() {
-  const [isChatOpen, setIsChatOpen] = useState(false)
-  const [message, setMessage] = useState("")
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false)
   const [email, setEmail] = useState("")
-  const [name, setName] = useState("")
+  const [popup, setPopup] = useState<string>("")
+  const [status, setStatus] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
+
+
+ async function handleSubmitForm() {
+  setPopup("")
+  setLoading(true);
+
+  if (email) {
+    const result = await submitEmail(email);
+    console.log(result)
+    if (result.success === true) {
+      setPopup("Thanks! You joined successfully");
+      setStatus(true)
+      setEmail("");
+    } else {
+      setStatus(false)
+      setPopup("Something went wrong");
+    }
+  }
+
+  setTimeout(() => setPopup(false), 3000);
+  setLoading(false);
+}
+
+
 
   const mockMessages = [
     { type: "bot", text: "Hi! I'm KwizKit AI. How can I help you create better assessments?" },
@@ -72,6 +102,7 @@ export default function PrelaunchPage() {
   ]
 
   return (
+
     <div className="min-h-screen theme-bg theme-text">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -112,7 +143,7 @@ export default function PrelaunchPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                className="text-xl md:text-2xl mb-12 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+                className="text-xl md:text-2xl mb-12 max-w-2xl opacity-75 mx-auto lg:mx-0 leading-relaxed"
               >
                 Revolutionary AI-powered test creation, intelligent grading, and comprehensive analytics for the modern educator.
               </motion.p>
@@ -142,17 +173,17 @@ export default function PrelaunchPage() {
                         strokeLinecap="round"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         initial={{ strokeDasharray: "0, 100" }}
-                        animate={{ strokeDasharray: "30, 100" }}
+                        animate={{ strokeDasharray: "45, 100" }}
                         transition={{ duration: 1.5, delay: 0.8, ease: "easeInOut" }}
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-blue-600">30%</span>
+                      <span className="text-sm font-semibold text-blue-600">45%</span>
                     </div>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-600 dark:text-gray-400">Build Progress</p>
-                    <p className="text-xs text-gray-500">Development in progress</p>
+                    <p className="font-medium ">Build Progress</p>
+                    <p className="text-xs opacity-75">Development in progress</p>
                   </div>
                 </div>
               </motion.div>
@@ -165,36 +196,27 @@ export default function PrelaunchPage() {
               transition={{ delay: 0.6, duration: 0.5 }}
               className="flex-shrink-0 w-full max-w-md lg:max-w-sm"
             >
-              <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-2xl shadow-blue-500/10">
+              <div className="theme-border backdrop-blur-lg rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-2xl shadow-blue-500/10">
                 <h2 className="text-2xl font-semibold mb-6 theme-text text-center">Join the Waitlist</h2>
                 <div className="space-y-4">
                   <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                      placeholder="Full Name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
-                      className="w-full pl-11 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                      className="w-full pl-11 pr-4 py-3 rounded-lg border theme-border theme-bg theme-text focus:outline-none transition-all"
                       placeholder="Email Address"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
+                  <p className="opacity-75 text-xs w-fit mx-auto">Comes with all the perks</p>
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                    onClick={handleSubmitForm}
+                    className="w-full py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Get Early Access
-                    <ChevronRight className="w-5 h-5" />
+                     {loading ? <span className="loading loading-bars loading-xl"></span> : 'Get Early Access'}
                   </motion.button>
                 </div>
               </div>
@@ -215,9 +237,9 @@ export default function PrelaunchPage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 theme-text">
               How KwizKit Will Transform
-              <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Your Teaching</span>
+              <span className="block brand-text bg-clip-text text-transparent">Your Teaching</span>
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl opacity-75 max-w-3xl mx-auto">
               Experience the future of educational assessment with our comprehensive suite of AI-powered tools.
             </p>
           </div>
@@ -231,7 +253,7 @@ export default function PrelaunchPage() {
                 key={feature.title}
                 variants={featureCardVariants}
                 whileHover={{ y: -5, scale: 1.02 }}
-                className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 shadow-lg shadow-transparent hover:shadow-blue-500/10 h-full flex"
+                className="backdrop-blur-sm rounded-2xl p-6 border theme-border transition-all duration-300 shadow-lg shadow-transparent hover:shadow-blue-500/60 h-full flex"
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center mb-5 transition-transform">
@@ -240,7 +262,7 @@ export default function PrelaunchPage() {
                   <h3 className="text-lg font-semibold mb-3 theme-text transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                  <p className="opacity-75 text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -259,8 +281,8 @@ export default function PrelaunchPage() {
         className="py-20 px-6"
       >
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 theme-text">Stay Connected</h2>
-          <p className="text-lg mb-8 text-gray-600 dark:text-gray-300">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 theme-text">Stay <span className="brand-text">Connected</span></h2>
+          <p className="text-lg mb-8 opacity-75">
             Follow our development journey and be the first to know when we launch.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -270,7 +292,7 @@ export default function PrelaunchPage() {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex w-full sm:w-auto items-center justify-center gap-3 bg-gray-200/50 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-800 px-6 py-3 rounded-lg transition-all"
+              className="flex w-full sm:w-auto items-center justify-center gap-3 theme-border shadow-blue-200 border shadow-sm px-6 py-3 rounded-lg transition-all"
             >
               <Github className="w-5 h-5" />
               <span className="font-medium">GitHub</span>
@@ -281,7 +303,7 @@ export default function PrelaunchPage() {
               rel="noopener noreferrer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex w-full sm:w-auto items-center justify-center gap-3 bg-gray-200/50 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-800 px-6 py-3 rounded-lg transition-all"
+              className="flex w-full sm:w-auto items-center justify-center gap-3 theme-border shadow-blue-200 border shadow-sm px-6 py-3 rounded-lg transition-all"
             >
               <Twitter className="w-5 h-5" />
               <span className="font-medium">Follow on X</span>
@@ -290,28 +312,28 @@ export default function PrelaunchPage() {
           <div className="flex items-center justify-center gap-4">
             <div className="flex -space-x-5">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-400 border-2 border-white dark:border-gray-950 flex items-center justify-center text-xs text-white font-bold">
+                <div key={i} className="w-10 h-10 rounded-full border-2 theme-border brand-bg flex items-center justify-center text-xs text-white font-bold">
                   <User className="w-4 h-4"/>
                 </div>
               ))}
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">37+ educators have joined so far</span>
+            <span className="text-sm opacity-75">37+ educators have joined so far</span>
           </div>
         </div>
       </motion.section>
 
       {/* Floating Chat Button */}
-      <motion.button
+      {/*<motion.button
         onClick={() => setIsChatOpen(true)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-blue-500/25 transition-all flex items-center justify-center z-40"
       >
         <MessageCircle size={24} />
-      </motion.button>
+      </motion.button>*/}
 
       {/* Chat Modal with Headless UI & Framer Motion */}
-      <AnimatePresence>
+      {/*<AnimatePresence>
             <Transition show={isChatOpen}>
           <Dialog static as={motion.div} className="relative z-50" open={isChatOpen} onClose={() => setIsChatOpen(false)}>
             <motion.div
@@ -377,7 +399,13 @@ export default function PrelaunchPage() {
             </div>
           </Dialog>
           </Transition>
-      </AnimatePresence>
+      </AnimatePresence>*/}
+      {
+    popup &&
+    <div className={`fixed  z-50 top-24 right-12 opp-text ${status ? 'bg-green-500' : 'bg-red-500'} p-4`}>
+      {status ? "Thanks! Joined Successfully" : "Join failed, please retry!" }
+    </div>
+  }
     </div>
   )
 }

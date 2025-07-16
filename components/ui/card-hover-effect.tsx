@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
+import type { ReactNode } from "react";
 
 import { useState } from "react";
 
@@ -11,10 +12,11 @@ export const HoverEffect = ({
     title: string;
     description: string;
     link: string;
+    icon: ReactNode
   }[];
   className?: string;
 }) => {
-  let [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
     <div
@@ -34,7 +36,7 @@ export const HoverEffect = ({
           <AnimatePresence>
             {hoveredIndex === idx && (
               <motion.span
-                className="absolute inset-0 h-full opacity-200 w-full theme-bg-subtle block  rounded-md"
+                className="absolute inset-0 h-full opacity-200 w-full bg-black/40 block  rounded-md"
                 layoutId="hoverBackground"
                 initial={{ opacity: 0 }}
                 animate={{

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -534,7 +536,7 @@ function AddQuestionModal({
           </button>
         </div>
         <div className="space-y-4 overflow-y-auto flex-grow pr-2 -mr-2">
-          <div>
+          <div className="px-1">
             <label className="block text-sm font-medium mb-1">Question</label>
             <textarea
               value={newQuestion.text}

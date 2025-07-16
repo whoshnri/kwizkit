@@ -1,10 +1,11 @@
+
 "use client"
 
 import { useState } from "react"
 import Lottie from "lottie-react";
 import animationData1 from "../public/lottie/hero.json";
 import animationData2 from "../public/lottie/ai.json";
-import { motion } from "framer-motion"
+import { motion ,easeOut } from "framer-motion"
 import dynamic from "next/dynamic";
 import { HoverEffect } from "@/components/ui/card-hover-effect";
 import FeedbackSection from "./components/Feedback";
@@ -37,7 +38,7 @@ const sectionVariants = {
   visible: (delay = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: "easeOut", delay },
+    transition: { duration: 0.6, ease: easeOut, delay },
   }),
 };
 
@@ -121,6 +122,7 @@ export default function HomePage() {
   const plans = [
   {
     name: 'Hobby',
+    link: "",
     price: '$0',
     frequency: '/ forever',
     description: 'For individuals and hobbyists starting out.',
@@ -166,10 +168,10 @@ export default function HomePage() {
 ];
 
   const features = [
-    { icon: <Sparkles className="w-6 h-6" />, title: "AI Test Generation", description: "Create tailored assessments with AI-powered question generation and vetting." },
-    { icon: <Users className="w-6 h-6" />, title: "Secure Distribution", description: "Seamlessly distribute tests via secure portals with time controls and anti-cheating measures." },
-    { icon: <BarChart3 className="w-6 h-6" />, title: "Insightful Analytics", description: "Get instant analytics, automated grading, and detailed feedback to improve outcomes." },
-    { icon: <Database className="w-6 h-6" />, title: "Cloud Storage", description: "Effortlessly store tests & results. Export to your preferred format anytime." },
+    { icon: <Sparkles className="w-6 h-6" />, title: "AI Test Generation", description: "Create tailored assessments with AI-powered question generation and vetting.", link: "" },
+    { icon: <Users className="w-6 h-6" />, title: "Secure Distribution", description: "Seamlessly distribute tests via secure portals with time controls and anti-cheating measures.", link: ""  },
+    { icon: <BarChart3 className="w-6 h-6" />, title: "Insightful Analytics", description: "Get instant analytics, automated grading, and detailed feedback to improve outcomes.", link: ""  },
+    { icon: <Database className="w-6 h-6" />, title: "Cloud Storage", description: "Effortlessly store tests & results. Export to your preferred format anytime.", link: ""  },
   ];
 
   const howItWorksSteps = [
@@ -393,7 +395,7 @@ export default function HomePage() {
       >
         {/* Globe BG: right-aligned, half-visible */}
         <div className="absolute left-[50%] -translate-x-[50%] h-[1000px] bottom-[-40rem] w-[80%] hidden md:block z-0">
-          {/*<World data={sampleArcs} globeConfig={globeConfig} />*/}
+          <World data={sampleArcs} globeConfig={globeConfig} />
         </div>
 
         {/* Content: centered on top of globe */}
