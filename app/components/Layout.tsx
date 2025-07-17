@@ -24,8 +24,10 @@ export default function AppLayout({
           <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
             KwizKit
           </Link>
+              <ThemeToggle />
 
-          <div className="flex items-center gap-4 md:gap-6">
+
+          {/*<div className="flex items-center gap-4 md:gap-6">
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium ">
               <ThemeToggle />
 
@@ -54,8 +56,8 @@ export default function AppLayout({
                   Signin
                 </Link>
               </div>
-            )}
-          </div>
+            )}*/}
+          {/*</div>*/}
         </header>
 
         <Providers>
