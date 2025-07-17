@@ -6,7 +6,7 @@
   import AppLayout from "./components/Layout";
 
   export const metadata: Metadata = {
-    metadataBase: new URL("https://kwizkit.app"),
+    metadataBase: new URL("https://kwizkit.tech"),
     title: {
       default: "KwizKit - AI-Powered Assessments for Educators",
       template: "%s | KwizKit",
@@ -15,7 +15,7 @@
     openGraph: {
       title: "KwizKit",
       description: "The future of educational assessments is here.",
-      url: "https://kwizkit.app",
+      url: "https://kwizkit.tech",
       siteName: "KwizKit",
       images: [
         {
