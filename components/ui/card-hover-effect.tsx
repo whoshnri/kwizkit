@@ -10,7 +10,7 @@ export const HoverEffect = ({
   items: {
     title: string;
     description: string;
-    link: string;
+    icon: React.ReactNode;
   }[];
   className?: string;
 }) => {
@@ -24,8 +24,7 @@ export const HoverEffect = ({
       )}
     >
       {items.map((item, idx) => (
-        <a
-          href={item?.link}
+        <span
           key={idx}
           className="relative group cursor-pointer block p-2 h-full text w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
@@ -53,7 +52,7 @@ export const HoverEffect = ({
             <CardTitle>{item.title}</CardTitle>
             <CardDescription>{item.description}</CardDescription>
           </Card>
-        </a>
+        </span>
       ))}
     </div>
   );

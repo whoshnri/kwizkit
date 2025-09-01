@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function fetchUsers(testId: string): Promise<{ added: boolean } | { error: string }> {
+export async function fetchUsers(testId:number): Promise<{ added: boolean } | { error: string }> {
   try {
     const users = await prisma.studentTest.findMany({
       where: { testId : testId },

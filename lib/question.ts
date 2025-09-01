@@ -1,11 +1,12 @@
+import { Prisma } from "@prisma/client";
 export type Question = {
-  testId: number | string;
-  qid : string;
-  id: number;
+  id: string;
+  testId: string;
   text: string;
-  type: "multiple-choice" | "short-answer" | "long-answer";
-  options?: string[];
-  correctAnswer?: string | string[] | number; // flexible
+  type: "multiple_choice" | "short_answer" | "essay" | "true_or_false";
+  options?: Prisma.JsonValue;
+  correctOption?: number | null;
+  correctAnswer?: string | null;
   marks: number;
-  explanation?: string;
+  explanation?: string | null;
 };

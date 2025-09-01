@@ -1,40 +1,39 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react"
-import { Test } from "@/lib/test";
-
+import React, { useState } from "react";
+import { useSession } from "../../SessionContext";
 
 interface ToolbarProps {
-  setNewTest: (newTest: Partial<Test>) => void;
+  setNewTest: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function CreateTestPage({setNewTest} : ToolbarProps) {
-  const { data: session } = useSession()
-  const router = useRouter();
+  const {session} = useSession()
   const [form, setForm] = useState({
     name: "",
     subject: "",
-    format: "multiple_choice",
     totalMarks: 0,
-    durationMinutes: 30,
     numberOfQuestions: 0,
     difficulty: "easy",
-    visibility: "private",
+    visibility: false,
     description: "",
   });
-  const [loading, setLoading] = useState(false);
+  const [load, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+    // console.log(session)
   };
 
   const handleSubmit = async () => {
-    // Validate required fields
     if (!form.name.trim() || !form.subject.trim()) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    if (!session) {
+      setError("User not authenticated");
       return;
     }
 
@@ -46,17 +45,17 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          createdById: session?.user?.id
+          createdById: session.sub,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create test");
-      setNewTest(false)
-      window.location.reload()
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setNewTest(false);
+      window.location.reload();
     }
   };
 
@@ -91,7 +90,7 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
         <div className="px-6 py-4">
           {error && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
@@ -113,7 +112,7 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
 
             {/* Subject */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium mb-1">
                 Subject <span className="text-red-500">*</span>
               </label>
               <input
@@ -126,45 +125,10 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
               />
             </div>
 
-
-            {/* Format and Duration - Side by side */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Duration (mins)
-                </label>
-                <input
-                  type="number"
-                  name="durationMinutes"
-                  placeholder="30"
-                  onChange={handleChange}
-                  value={form.durationMinutes}
-                  min="1"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-                />
-              </div>
-               {/* Format */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Format
-              </label>
-              <select
-                name="format"
-                onChange={handleChange}
-                value={form.format}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-              >
-                <option value="multiple_choice">Multiple Choice</option>
-                <option value="theory">Theory</option>
-                <option value="mixed">Mixed</option>
-              </select>
-            </div>
-            </div>
-
             {/* Difficulty and Visibility - Side by side */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="col-span-1">
+                <label className="block text-sm font-medium mb-1">
                   Difficulty
                 </label>
                 <select
@@ -178,25 +142,26 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
                   <option value="hard">Hard</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="col-span-1">
+                <label className="block text-sm font-medium mb-1">
+
                   Visibility
+                   <span className="text-red-500 ml-2">*</span>
+                   <sup className="ml-1 text-xs text-gray-400">(you can edit this later)</sup>
+
                 </label>
-                <select
+                <input
                   name="visibility"
-                  onChange={handleChange}
-                  value={form.visibility}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-                >
-                  <option value="private">Private</option>
-                  <option value="public">Public</option>
-                </select>
+                  disabled
+                  value={form.visibility ? "Public" : "Private"}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400 disabled:cursor-not-allowed disabled:opacity-30 "
+                />
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium mb-1">
                 Description
               </label>
               <textarea
@@ -215,21 +180,21 @@ export default function CreateTestPage({setNewTest} : ToolbarProps) {
         <div className="px-6 py-4 border-t theme-border flex justify-end space-x-3">
           <button
             onClick={handleBackdropClick}
-            className="px-4 py-2 text-gray-700 rounded border theme-border cursor-pointer dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-            disabled={loading}
+            className="px-4 py-2 theme-bg rounded border theme-border cursor-pointer  hover:text-gray-900  transition-colors"
+            disabled={load}
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white cursor-pointer rounded font-medium transition-colors flex items-center space-x-2"
-            disabled={loading}
+            disabled={load}
           >
-            {loading && (
+            {load && (
           <span className="loading loading-bars loading-sm"></span>
 
             )}
-            <span>{loading ? "Creating..." : "Create Test"}</span>
+            <span>{load ? "Creating..." : "Create Test"}</span>
           </button>
         </div>
       </div>

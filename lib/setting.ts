@@ -1,15 +1,16 @@
-export interface Settings {
+import { Prisma } from "@prisma/client";
+
+export interface Settings extends Prisma.JsonObject {
   general: {
-    shuffleQuestions: boolean; // Shuffle question order
-    allowRetake: boolean; // Allow students to retake the test
+    shuffleQuestions: boolean;
+    shuffleOptions: boolean;
   };
   security: {
-    enableTabSwitching: boolean; // Enable proctoring (e.g., webcam monitoring)
-    restrictIp: boolean; // Restrict test to specific IP addresses
-    disableCopyPaste: boolean; // Prevent copy-paste during test
+    enableTabSwitching: boolean;
+    disableCopyPaste: boolean;
   };
   users: {
     usersAdded: boolean;
-    uploadedFiles = [];
   };
+  testTime: number;
 }

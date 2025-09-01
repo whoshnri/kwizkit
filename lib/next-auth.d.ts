@@ -7,7 +7,7 @@ declare module "next-auth" {
    * or the database user object.
    */
   interface User extends DefaultUser {
-    // Add your custom properties here:
+    provider: string;
     firstName?: string | null;
   }
 

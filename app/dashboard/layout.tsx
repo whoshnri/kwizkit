@@ -1,38 +1,28 @@
-// app/(dashboard)/layout.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+
 import Sidebar from "./components/Navbar";
 import Header from "./components/Header";
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/auth/authorize");
-  }
-
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex theme-bg-subtle p-4 gap-1 overflow-hidden">
-    <div className="w-auto">
-      <Sidebar session={session} />
-      </div>
-      <div
-        className="w-full h-screen overflow-y-auto space-y-1"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
-      >
+      <div className="flex min-h-screen theme-bg-subtle p-1 gap-1">
+        {/* Sidebar Navigation */}
+        <aside className="w-fit h-full">
+          <Sidebar />
+        </aside>
 
-        <Header session={session} />
-        {children}
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col min-w-0 space-y-1">
+          <Header />
+          <div
+            className="flex-1 overflow-y-auto"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            {children}
+          </div>
+        </main>
       </div>
-    </div>
   );
 }
-

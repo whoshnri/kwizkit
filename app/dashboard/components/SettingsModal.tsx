@@ -3,14 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Upload, File, Save } from "lucide-react";
 import { Switch } from "@headlessui/react";
-import { fetchUsers } from "@/app/actions/isUsersAdded";
 import { saveSettings } from "@/app/actions/saveSettings";
 import { fetchSettings } from "@/app/actions/fetchSettings";
-import { Settings } from "@/lib/settings";
+import { Settings } from "@/lib/setting";
 
 interface SettingsProps {
   testId: string;
-  setShowSettingsModal: () => void;
+  setShowSettingsModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SettingSwitch = ({
@@ -22,7 +21,11 @@ const SettingSwitch = ({
   section: "general" | "security";
   keyName: string;
   value: boolean;
-  onChange: (section: "general" | "security", key: string, value: boolean) => void;
+  onChange: (
+    section: "general" | "security",
+    key: string,
+    value: boolean
+  ) => void;
 }) => {
   return (
     <Switch
@@ -45,50 +48,39 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
   const [settings, setSettings] = useState<Settings>({
     general: {
       shuffleQuestions: false,
-      allowRetake: false,
+      shuffleOptions: false,
     },
     security: {
       enableTabSwitching: true,
-      restrictIp: false,
       disableCopyPaste: false,
     },
     users: {
       usersAdded: false,
     },
+    testTime: 200,
   });
 
-  const [published, setPublished] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [uploadType, setUploadType] = useState<"file" | "url">("file");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isDragActive, setIsDragActive] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [processingStatus, setProcessingStatus] = useState<"idle" | "processing" | "complete" | "error">("idle");
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [published, setPublished] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const loadSettingsAndUsers = async () => {
       if (!testId) return;
 
       try {
-        const usersResult = await fetchUsers(testId);
-        if ("error" in usersResult) throw new Error(usersResult.error);
+        const bundle = await fetchSettings(testId);
+        const { settings, visibility } = bundle;
 
-        const settingsResult = await fetchSettings(testId);
-        if ("error" in settingsResult) throw new Error(settingsResult.error);
+        const data = settings as Settings;
 
         setSettings((prev) => ({
           ...prev,
-          ...settingsResult.settings,
-          users: {
-            ...prev.users,
-            usersAdded: usersResult.added,
-          },
+          ...data,
         }));
+        setPublished(visibility || false);
       } catch (err) {
-        console.error("Failed to fetch settings or user uploads", err);
+        console.error("Failed to fetch settings", err);
         setSettings((prev) => ({
           ...prev,
           users: {
@@ -104,57 +96,11 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
     loadSettingsAndUsers();
   }, [testId]);
 
-  const handleConfirmUpload = async () => {
-    if (!selectedFile || !testId) return;
-
-    setProcessingStatus("processing");
-    setErrorMessage(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("testId", testId);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Upload failed");
-
-      setSettings((prev) => ({
-        ...prev,
-        users: {
-          ...prev.users,
-          usersAdded: true,
-        },
-      }));
-
-      setProcessingStatus("complete");
-      setTimeout(() => {
-        setProcessingStatus("idle");
-        setSelectedFile(null);
-        fileInputRef.current && (fileInputRef.current.value = "");
-      }, 2000);
-    } catch (err: any) {
-      setErrorMessage(err.message);
-      setProcessingStatus("error");
-
-      setTimeout(() => {
-        setProcessingStatus("idle");
-        setSelectedFile(null);
-        setErrorMessage(null);
-        fileInputRef.current && (fileInputRef.current.value = "");
-      }, 3000);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const result = await saveSettings(testId, settings);
+      const result = await saveSettings(testId, settings, published);
       if ("error" in result) {
         console.error("Failed to save settings:", result.error);
       }
@@ -182,7 +128,11 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold ">Test Settings</h2>
-            <button onClick={() => setShowSettingsModal(false)} type="button" className="p-2 rounded-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/5">
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              type="button"
+              className="p-2 rounded-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+            >
               <X className="w-5 h-5 " />
             </button>
           </div>
@@ -193,7 +143,9 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
             <div className="space-y-2">
               {Object.entries(settings.general).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
+                  <span className="text-sm capitalize">
+                    {key.replace(/([A-Z])/g, " $1")}
+                  </span>
                   <SettingSwitch
                     section="general"
                     keyName={key}
@@ -216,7 +168,9 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
             <div className="space-y-2">
               {Object.entries(settings.security).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
+                  <span className="text-sm capitalize">
+                    {key.replace(/([A-Z])/g, " $1")}
+                  </span>
                   <SettingSwitch
                     section="security"
                     keyName={key}
@@ -233,93 +187,6 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
             </div>
           </div>
 
-          {/* Upload Users */}
-          <div>
-            <h3 className="text-md font-semibold ">Users</h3>
-            <p className="text-xs mb-2">Upload student list for this test</p>
-
-            <div className="flex gap-4 mb-4">
-              {["file", "url"].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  className={`px-3 py-1 rounded ${
-                    uploadType === type ? "bg-blue-600 text-white" : "bg-gray-300 text-black"
-                  }`}
-                  onClick={() => setUploadType(type as "file" | "url")}
-                >
-                  {type.toUpperCase()}
-                </button>
-              ))}
-            </div>
-
-            {!settings.users.usersAdded && uploadType === "file" && !selectedFile && (
-              <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center ${
-                  isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"
-                }`}
-                onDragEnter={(e) => {
-                  e.preventDefault();
-                  setIsDragActive(true);
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDragLeave={() => setIsDragActive(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files[0];
-                  if (file) setSelectedFile(file);
-                }}
-              >
-                <Upload className="w-8 h-8 mx-auto mb-2 " />
-                <p className="text-sm ">Drag and drop student list</p>
-                <p className="text-xs text-gray-500">Supported: .csv, .xlsx</p>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept=".csv,.xlsx"
-                  onChange={(e) => e.target.files?.[0] && setSelectedFile(e.target.files[0])}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-4 bg-blue-600 cursor-pointer text-white px-4 py-2 rounded"
-                >
-                  Select File
-                </button>
-              </div>
-            )}
-
-            {selectedFile && (
-              <div className="mt-4 p-4 border border-gray-300 rounded bg-gray-50 dark:bg-gray-800">
-                <div className="flex items-center gap-2">
-                  <File className="w-5 h-5 text-black dark:text-white" />
-                  <p className="text-sm ">
-                    Selected file: {selectedFile.name}
-                  </p>
-                </div>
-                <p className="text-xs text-red-500 mt-1">Changes cannot be undone.</p>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={handleConfirmUpload} type="button" className="bg-green-600 text-white px-4 py-2 rounded">
-                    Confirm & Upload
-                  </button>
-                  <button onClick={() => setSelectedFile(null)} type="button" className="bg-gray-600 text-white px-4 py-2 rounded">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {processingStatus === "processing" && <p className="mt-2 text-sm ">Uploading...</p>}
-            {processingStatus === "complete" && <p className="mt-2 text-sm text-green-600">Upload complete!</p>}
-            {errorMessage && <p className="mt-2 text-sm text-red-600">{errorMessage}</p>}
-
-            {settings.users.usersAdded && (
-              <div className="mt-4 text-sm ">
-                Users have already been uploaded for this test.
-              </div>
-            )}
-          </div>
 
           <div className="sticky bottom-2 theme-bg theme-border border-t pt-4">
             <div className="flex items-center justify-between">
@@ -343,7 +210,9 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
                 type="submit"
                 disabled={saving}
                 className={`flex items-center gap-2 px-4 py-2 rounded text-white transition ${
-                  saving ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                  saving
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
                 {saving ? (

@@ -7,97 +7,129 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String    @id @default(cuid())
+  firstName String?
+  lastName  String?
+  email     String?   @unique
+  unique_id String?   @unique
+  image     String?
+  role      UserRole  @default(tutor)
+  gender    Gender    @default(male)
+  phone     String?
+  city      String?
+  accounts  Account[]
+  tests     Test[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  managedTables TableSchema[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  tutor
+  admin
+}
+
+enum Gender {
+  male
+  female
+}
+
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  accountId         String  @unique
+  provider          String
+  providerAccountId String
+  connectionId      String? // optional: external connection reference
+
+  refresh_token String?
+  access_token  String?
+  expires_at    Int?
+  id_token      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
-model User {
-  id            String       @id @default(cuid())
-  name          String?
-  firstName     String?
-  lastName      String?
-  password      String
-  email         String?      @unique
-  unique_id     String?      @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  role          UserRole     @default(tutor)
-  tests         Test[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-  @@unique([identifier, token])
-}
-
 model Test {
-  id                String       @id @default(cuid())
+  id                String        @id @default(cuid())
   name              String
   description       String?
   subject           String
-  format            TestFormat
   totalMarks        Int
-  durationMinutes   Int
-  students          StudentTest[]
   numberOfQuestions Int
-  difficulty        Difficulty
-  published         Boolean      @default(false)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  createdBy         User         @relation(fields: [createdById], references: [id])
-  createdById       String
-  visibility        Visibility
-  slug              String       @unique
+  difficulty        Difficulty    @default(easy)
+  slug              String        @unique
   settings          Json
+  visibility        Boolean       @default(false)
+  createdById       String
+  createdBy         User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
   questions         Question[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  takers            TableSchema[]
+
   @@index([createdById])
 }
 
 model Question {
-  qid           String       @unique
-  test          Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
-  testId        String
+  id            String       @id @default(cuid())
   text          String
   type          QuestionType
-  options       Json
-  correctOption Int
-  correctAnswer String
+  options       Json?
+  correctOption Int?
+  correctAnswer String?
   marks         Int
   explanation   String?
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
-model StudentTest {
-  studentMatricNumber String    @map("studentMatricNumber")
-  testId              String    @map("testId")
-  studentSurname      String
-  test                Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
-  assignedAt          DateTime  @default(now())
-  score               Int?
-  @@id([studentMatricNumber, studentSurname ,testId])
+model Student {
+  id        String   @id @default(cuid())
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tableRows TableRow[]
+
+  @@map("students")
 }
 
-enum TestFormat {
-  multiple_choice
-  theory
-  mixed
+model TableSchema {
+  id        String     @id @default(cuid())
+  name      String
+  columns   Json
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  managers  User[]
+  test      Test[]
+  rows      TableRow[]
+
+  @@map("table_schemas")
+}
+
+model TableRow {
+  id        String   @id @default(cuid())
+  tableId   String   @map("table_id")
+  studentId String   @map("student_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  table   TableSchema @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  student Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([tableId, studentId])
+  @@map("table_rows")
 }
 
 enum Difficulty {
@@ -106,19 +138,9 @@ enum Difficulty {
   hard
 }
 
-enum Visibility {
-  private
-  public
-}
-
 enum QuestionType {
   multiple_choice
   short_answer
   essay
   true_or_false
-}
-
-enum UserRole {
-  tutor
-  school
 }
