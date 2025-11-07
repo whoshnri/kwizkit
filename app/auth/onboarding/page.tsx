@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, use } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { useGSAP } from "@gsap/react";
@@ -23,14 +23,19 @@ interface FormData {
   gender: string;
 }
 
-export default function OnboardingPage() {
+export default function OnboardingPage ({
+  searchParams,
+}: {
+  searchParams: Promise<{ testId?: string, step?: string }>;
+}) {
   const { idToken } = useKindeBrowserClient();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const params = use(searchParams);
+  const testId = params.testId ?? null;
 
   // State
-  const currentStep = Number(searchParams?.get("step") ?? 1);
+  const currentStep = Number(params.step ?? 1);
   const totalSteps = 2;
   const [formData, setFormData] = useState<FormData>({
     firstName: "",

@@ -4,8 +4,20 @@ import { useState, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { X, Check, CreditCard, User, Mail, ArrowLeft } from "lucide-react";
-import { Plan, BillingCycle } from "@/lib/index";
+type Plan = {
+  name: string,
+  description : string,
+  price : {monthly : string , annually : string},
+  priceIds : {
+    monthly : string,
+    annually : string
+  },
+  features : string[],
+  popular? : boolean
 
+}
+
+type BillingCycle = "monthly" | "annually"
 interface CheckoutModalProps {
   plan: Plan;
   billingCycle: BillingCycle;

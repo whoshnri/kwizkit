@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { use } from "react";
 import {
   Plus,
   Trash2,
@@ -129,12 +130,17 @@ function parseServerTest(raw: any): Test {
   };
 }
 
-const TestMaker: React.FC = () => {
+const TestMaker = ({
+  searchParams,
+}: {
+  searchParams: Promise<{ testId?: string }>;
+}) => {
   const [test, setTest] = useState<Test | null>(null); // original from server
   const [newTest, setNewTest] = useState<Test | null>(null); // editable copy
 
-  const searchParams = useSearchParams();
-  const testId = searchParams?.get("testId") ?? null;
+  // const searchParams = useSearchParams();
+  const params = use(searchParams)
+  const testId = params.testId ?? null;
 
   // UI states
   const { generatedContent } = useSession();
@@ -171,42 +177,42 @@ const TestMaker: React.FC = () => {
   }, [testId]);
 
   useEffect(() => {
-  if (!generatedContent || generatedContent.length === 0) {
-    return;
-  }
+    if (!generatedContent || generatedContent.length === 0) {
+      return;
+    }
 
-  setNewTest((prev) => {
-    if (!prev) return prev;
-    const newQuestions = generatedContent.map((genQ, idx) => {
-      const options = genQ.options && typeof genQ.options === 'object' ? genQ.options : {};
-      
+    setNewTest((prev) => {
+      if (!prev) return prev;
+      const newQuestions = generatedContent.map((genQ, idx) => {
+        const options =
+          genQ.options && typeof genQ.options === "object" ? genQ.options : {};
+
+        return {
+          id: genQ.id ?? `${Date.now()}-${idx}`,
+          testId: prev.id,
+          text: genQ.text ?? "",
+          type: genQ.type ?? "multiple_choice",
+          options: options,
+          correctOption: genQ.correctOption ?? null,
+          correctAnswer: genQ.correctAnswer ?? null,
+          marks: genQ.marks ?? 0,
+          explanation: genQ.explanation ?? null,
+        };
+      });
+
+      const totalMarks = newQuestions.reduce(
+        (sum, q) => sum + (q.marks ?? 0),
+        0
+      );
+
       return {
-        id: genQ.id ?? `${Date.now()}-${idx}`,
-        testId: prev.id,
-        text: genQ.text ?? '',
-        type: genQ.type ?? 'multiple_choice',
-        options: options,
-        correctOption: genQ.correctOption ?? null,
-        correctAnswer: genQ.correctAnswer ?? null,
-        marks: genQ.marks ?? 0,
-        explanation: genQ.explanation ?? null,
+        ...prev,
+        questions: newQuestions,
+        totalMarks,
+        numberOfQuestions: newQuestions.length,
       };
     });
-
-    const totalMarks = newQuestions.reduce(
-      (sum, q) => sum + (q.marks ?? 0),
-      0
-    );
-
-    return {
-      ...prev,
-      questions: newQuestions, 
-      totalMarks,
-      numberOfQuestions: newQuestions.length,
-    };
-  });
-}, [generatedContent]);
-
+  }, [generatedContent]);
 
   useEffect(() => {
     if (test && newTest) {
@@ -462,7 +468,7 @@ function BuilderPage({
                       <li
                         key={key}
                         className={`flex items-center gap-2 ${
-                          i  === question.correctOption
+                          i === question.correctOption
                             ? "font-semibold text-green-500"
                             : "theme-text-secondary"
                         }`}

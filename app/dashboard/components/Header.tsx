@@ -14,7 +14,7 @@ export default function Header() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const [newTest, setNewTest] = useState(false);
-  const { session, loading, setGeneratedContent } = useSession();
+  const { session, loading } = useSession();
 
   return (
     <>
@@ -67,7 +67,7 @@ export default function Header() {
         </nav>
       </div>
       <div>
-        <ProjectToolbar setNewTest={setNewTest} setGeneratedContent={setGeneratedContent} />
+        <ProjectToolbar setNewTest={setNewTest} />
       </div>
       {newTest && <NewTest setNewTest={setNewTest} />}
     </>
@@ -77,10 +77,9 @@ export default function Header() {
 
 interface ToolbarProps {
   setNewTest: (value: boolean) => void;
-  setGeneratedContent: React.Dispatch<React.SetStateAction<Question[] | null>>;
 }
 
-export function ProjectToolbar({ setNewTest, setGeneratedContent }: ToolbarProps) {
+export function ProjectToolbar({ setNewTest }: ToolbarProps) {
   const pathname = usePathname();
   const isTestsRoute = pathname === "/dashboard/tests";
   const isHomeRoute = pathname === "/dashboard";
@@ -148,7 +147,6 @@ export function ProjectToolbar({ setNewTest, setGeneratedContent }: ToolbarProps
 
       <AIContentModal
         isOpen={isAiModalOpen}
-        onSave={setGeneratedContent}
         onClose={() => setIsAiModalOpen(false)}
         currentContent={pageContent}
       />

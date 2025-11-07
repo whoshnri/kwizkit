@@ -3,7 +3,10 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { CTAButton } from "../page";
+import Link from "next/link";
+
+
+
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -57,7 +60,11 @@ const PricingSection = () => {
             <li>✓ Community Support</li>
           </ul>
           <div className="mt-8">
-            <CTAButton href="/auth/register">Get Started</CTAButton>
+            <Link href="/auth/register">
+              <span className="theme-button inline-block text-center text-base font-semibold">
+                Get Started
+              </span>
+            </Link>
           </div>
         </div>
 
@@ -77,7 +84,11 @@ const PricingSection = () => {
             <li>✓ Custom Certifications</li>
           </ul>
           <div className="mt-8">
-            <CTAButton href="/pricing">Choose Pro</CTAButton>
+            <Link href={"/pricing"}>
+              <span className="theme-button inline-block text-center text-base font-semibold">
+                Choose Pro
+              </span>
+            </Link>
           </div>
         </div>
 
@@ -94,7 +105,11 @@ const PricingSection = () => {
             <li>✓ Custom Integrations</li>
           </ul>
           <div className="mt-8">
-            <CTAButton href="/support">Contact Sales</CTAButton>
+            <Link href="/support">
+              <span className="theme-button inline-block text-center text-base font-semibold">
+                Contact Sales
+              </span>
+            </Link>
           </div>
         </div>
       </div>
