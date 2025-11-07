@@ -15,9 +15,7 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: VscHome },
   { label: "My Tests", href: "/dashboard/tests", icon: VscBook },
-  { label: "My Databases", href: "/dashboard/database", icon: CiDatabase },
   { label: "Results", href: "/dashboard/results", icon: VscGraph },
-  { label: "Settings", href: "/dashboard/settings", icon: CiSettings },
 ];
 
 
@@ -28,9 +26,9 @@ export default function Navbar() {
   return (
     <TooltipProvider>
       <div
-        className={`rounded theme-bg shadow-lg transition-all duration-300 ease-in-out z-50`}
+        className={`rounded theme-bg h-full shadow-lg transition-all duration-300 ease-in-out z-50`}
       >
-        <div className={`flex flex-col min-h-screen py-6 px-2 items-center`}>
+        <div className={`flex flex-col min-h-screen h-full py-6 px-2 items-center`}>
           {/* Navigation Items */}
           <div className={`flex flex-col gap-2 flex-1`}>
             {navItems.map((item) => (
@@ -45,8 +43,8 @@ export default function Navbar() {
                       <item.icon className={`h-5 w-5 flex-shrink-0 ${pathname === item.href ? 'text-white' : ''}`} />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="right" >
-                    <p className="text-white">{item.label}</p>
+                  <TooltipContent side="right" className="bg-white">
+                    <p className="text-black">{item.label}</p>
                   </TooltipContent>
                 </Tooltip>
               </Link>

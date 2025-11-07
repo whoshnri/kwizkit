@@ -14,23 +14,15 @@ model User {
   email     String?   @unique
   unique_id String?   @unique
   image     String?
-  role      UserRole  @default(tutor)
   gender    Gender    @default(male)
   phone     String?
   city      String?
-  accounts  Account[]
   tests     Test[]
-
+  accountId String @unique
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-  managedTables TableSchema[]
 
   @@map("users")
-}
-
-enum UserRole {
-  tutor
-  admin
 }
 
 enum Gender {
@@ -38,41 +30,24 @@ enum Gender {
   female
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String  @unique
-  accountId         String  @unique
-  provider          String
-  providerAccountId String
-  connectionId      String? // optional: external connection reference
-
-  refresh_token String?
-  access_token  String?
-  expires_at    Int?
-  id_token      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
 
 model Test {
   id                String        @id @default(cuid())
   name              String
   description       String?
   subject           String
-  totalMarks        Int
-  numberOfQuestions Int
+  totalMarks        Int?
+  numberOfQuestions Int?
   difficulty        Difficulty    @default(easy)
   slug              String        @unique
   settings          Json
   visibility        Boolean       @default(false)
   createdById       String
+  duration          Int?
   createdBy         User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
   questions         Question[]
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
-  takers            TableSchema[]
 
   @@index([createdById])
 }
@@ -91,46 +66,6 @@ model Question {
   test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
-model Student {
-  id        String   @id @default(cuid())
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  email     String
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  tableRows TableRow[]
-
-  @@map("students")
-}
-
-model TableSchema {
-  id        String     @id @default(cuid())
-  name      String
-  columns   Json
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  managers  User[]
-  test      Test[]
-  rows      TableRow[]
-
-  @@map("table_schemas")
-}
-
-model TableRow {
-  id        String   @id @default(cuid())
-  tableId   String   @map("table_id")
-  studentId String   @map("student_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  table   TableSchema @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  student Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([tableId, studentId])
-  @@map("table_rows")
-}
 
 enum Difficulty {
   easy

@@ -9,12 +9,10 @@ export async function fetchTests(sub: string) {
       orderBy: { createdAt: "desc" },
       where: {
         createdBy: {
-          accounts: {
-            some: { accountId: sub }, 
-          },
-        },
+          id: sub
+        }
       },
-      include: { questions: true }, // keep or remove depending on needs
+      include: { questions: true }, 
     });
 
     if (!tests || tests.length === 0) {

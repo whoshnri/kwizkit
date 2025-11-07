@@ -4,7 +4,7 @@ import {Settings} from "@/lib/setting"
 
 const prisma = new PrismaClient();
 
-export async function saveSettings(testId: string, settings: Settings, published : boolean){
+export async function saveSettings(testId: string, settings: Settings){
   try {
     const test = await prisma.test.findUnique({
       where: { id: testId },
@@ -15,7 +15,6 @@ export async function saveSettings(testId: string, settings: Settings, published
         where: { id: testId },
         data: {
           settings: settings,
-          visibility: published,
         },
       });
       return { success: true };

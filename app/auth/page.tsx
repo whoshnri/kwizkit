@@ -1,40 +1,62 @@
+"use client";
+
+import { useRef } from "react";
 import {
   RegisterLink,
   LoginLink,
 } from "@kinde-oss/kinde-auth-nextjs/components";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 
 export default function AuthPage() {
+  const authCardRef = useRef<HTMLDivElement>(null);
+
+  // GSAP animation for a smooth entrance
+  useGSAP(() => {
+    gsap.from(authCardRef.current, {
+      opacity: 0,
+      y: 30,
+      duration: 0.75,
+      ease: "power2.out",
+    });
+  }, []);
+
   return (
-    <div className=" flex items-center justify-center theme-bg p-4">
-      <div className="shadow-xs shadow-blue-400 rounded p-10 w-full max-w-md text-center">
+    <div className="flex  items-center justify-center theme-bg p-4">
+      <div
+        ref={authCardRef}
+        className="border border-dotted theme-border-color rounded-md p-8 sm:p-10 w-full max-w-md text-center"
+      >
         <h1 className="text-3xl font-bold theme-text mb-2">Welcome</h1>
-        <p className="theme-text opacity-75 mb-8">
+        <p className="theme-text-secondary mb-8">
           Sign in to access your dashboard or create a new account.
         </p>
 
         <div className="space-y-4">
+          {/* Primary Button Style */}
           <LoginLink
-            postLoginRedirectURL="/dashboard"
-            className="block w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+            postLoginRedirectURL="/api/auth/self"
+            className="theme-button-primary"
           >
             Sign In
           </LoginLink>
 
+          {/* Secondary Button Style */}
           <RegisterLink
-            postLoginRedirectURL="/auth/onboarding"
-            className="block w-full px-6 py-3 bg-white text-indigo-600 border border-indigo-200 font-semibold rounded-xl shadow-sm hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+            postLoginRedirectURL="/api/auth/self"
+            className="theme-button-secondary"
           >
             Create Account
           </RegisterLink>
         </div>
 
-        <p className="mt-8 text-sm text-gray-500">
+        <p className="mt-8 text-sm theme-text-secondary">
           By continuing, you agree to our{" "}
-          <a href="/terms" className="text-indigo-600 hover:underline">
+          <a href="/terms" className="theme-text-accent hover:underline">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="/privacy" className="text-indigo-600 hover:underline">
+          <a href="/privacy-policy" className="theme-text-accent hover:underline">
             Privacy Policy
           </a>
           .

@@ -1,223 +1,168 @@
-"use client"
+"use client";
 
-import { Fragment } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Disclosure } from "@headlessui/react"
-import { Mail, MessageCircle, HelpCircle, Clock, ChevronDown, Send } from "lucide-react"
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Mail, MessageCircle, HelpCircle, ChevronDown, Send, Clock } from "lucide-react";
 
-// Framer Motion Variants for animations
-const sectionVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.15,
-      duration: 0.6,
-      ease: "easeOut",
-    },
-  }),
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
 }
 
-const faqItems = [
-  {
-    question: "How does AI test generation work?",
-    answer: "Our AI analyzes your curriculum and learning objectives to generate relevant, high-quality questions tailored to your students' level and needs. You can specify topics, difficulty, and question formats.",
-  },
-  {
-    question: "Can I customize the generated questions?",
-    answer: "Yes, absolutely! You have full control. You can edit, modify, or completely rewrite any AI-generated questions to perfectly match your specific requirements and teaching style.",
-  },
-  {
-    question: "Is student data secure?",
-    answer: "Security is our top priority. We use enterprise-grade encryption and comply with educational privacy standards like FERPA and GDPR to protect all student and educator information.",
-  },
-  {
-    question: "What question types are supported?",
-    answer: "KwizKit supports a wide range of question types, including multiple choice, true/false, short answer, essay questions, fill-in-the-blank, matching, and we are continuously adding more.",
-  },
-]
+// Interface for type-safe FAQ items
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+const faqItems: FaqItem[] = [
+    {
+      question: "How does AI test generation work?",
+      answer: "Our AI analyzes your curriculum and learning objectives to generate relevant, high-quality questions tailored to your students' level and needs.",
+    },
+    {
+      question: "Can I customize the generated questions?",
+      answer: "Yes, absolutely! You have full control. You can edit, modify, or completely rewrite any AI-generated questions to perfectly match your specific requirements.",
+    },
+    {
+      question: "Is student data secure?",
+      answer: "Security is our top priority. We use enterprise-grade encryption and comply with educational privacy standards like FERPA to protect all student and educator information.",
+    },
+    {
+      question: "What question types are supported?",
+      answer: "KwizKit supports a wide range of question types, including multiple choice, true/false, short answer, essay questions, and we are continuously adding more.",
+    },
+];
 
 export default function SupportPage() {
-  const handleScrollToContact = (e) => {
-    e.preventDefault();
-    document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Animate sections into view on scroll
+    const sections = gsap.utils.toArray<HTMLElement>(".animated-section");
+    sections.forEach((section) => {
+      gsap.from(section, {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: section,
+          start: "top 85%",
+        },
+      });
+    });
+
+    // GSAP-powered accordion logic
+    const accordions = gsap.utils.toArray<HTMLDivElement>(".faq-item");
+    accordions.forEach(accordion => {
+        const button = accordion.querySelector<HTMLButtonElement>(".faq-button");
+        const content = accordion.querySelector<HTMLDivElement>(".faq-content");
+        const chevron = button?.querySelector("svg");
+
+        if (!button || !content || !chevron) return; // Type guard
+
+        gsap.set(content, { height: 0, opacity: 0 }); // Set initial state
+
+        button.addEventListener("click", () => {
+            const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+            // Close all others
+            accordions.forEach(other => {
+                if (other !== accordion) {
+                    const otherButton = other.querySelector<HTMLButtonElement>('.faq-button');
+                    const otherContent = other.querySelector<HTMLDivElement>('.faq-content');
+                    const otherChevron = otherButton?.querySelector("svg");
+                    if (otherButton && otherContent && otherChevron) {
+                        otherButton.setAttribute('aria-expanded', 'false');
+                        gsap.to(otherContent, { height: 0, opacity: 0, duration: 0.4, ease: 'power1.inOut' });
+                        gsap.to(otherChevron, { rotate: 0, duration: 0.3 });
+                    }
+                }
+            });
+
+            // Toggle clicked one
+            if (isExpanded) {
+                button.setAttribute('aria-expanded', 'false');
+                gsap.to(content, { height: 0, opacity: 0, duration: 0.4, ease: 'power1.inOut' });
+                gsap.to(chevron, { rotate: 0, duration: 0.3 });
+            } else {
+                button.setAttribute('aria-expanded', 'true');
+                gsap.to(content, { height: 'auto', opacity: 1, duration: 0.5, ease: 'power1.out' });
+                gsap.to(chevron, { rotate: 180, duration: 0.3 });
+            }
+        });
+    });
+
+  }, { scope: mainRef });
 
   return (
-    <div className="theme-bg theme-text min-h-screen py-16 md:py-24 px-6">
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={sectionVariants}
-        custom={1}
-        className="max-w-4xl mx-auto"
-      >
-        <div className="text-center mb-16">
+    <div ref={mainRef} className="theme-bg theme-text min-h-screen py-16 md:py-24 px-4 sm:px-6 lg:px-8">
+      <section className="max-w-xl mx-auto">
+        <div className="animated-section text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            How Can We <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Help?</span>
+            How Can We <span className="theme-text-accent">Help?</span>
           </h1>
-          <p className="text-lg md:text-xl theme-text opacity-80 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl theme-text-secondary max-w-2xl mx-auto">
             Get the support you need to make the most of KwizKit.
           </p>
         </div>
 
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={sectionVariants}
-          custom={2}
-          className="grid md:grid-cols-2 gap-8 mb-16"
-        >
+        <div className="animated-section grid md:grid-cols-2 gap-8 mb-16">
           {/* Email Support Card */}
-          <motion.a
-            href="#contact-form"
-            onClick={handleScrollToContact}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="block brand-bg backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-transparent hover:shadow-blue-500/10 transition-shadow duration-300"
-          >
+          <a href="#contact-form" className="block border-2 border-dashed theme-border-color rounded-md p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
-                <Mail size={24} />
-              </div>
+              <div className="theme-text-accent flex-shrink-0"><Mail size={24} /></div>
               <div>
                 <h3 className="text-xl font-semibold">Email Support</h3>
-                <p className="opp-text opacity-80">Response within 24 hours</p>
+                <p className="theme-text-secondary">Response within 24 hours</p>
               </div>
             </div>
-            <p className="opp-text dark:text-gray-300">
+            <p className="theme-text-secondary">
               Best for detailed questions. Send us your inquiry and we'll provide a thorough response.
             </p>
-          </motion.a>
+          </a>
 
           {/* Live Chat Card */}
-          <motion.div
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="theme-bg backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-transparent hover:shadow-blue-500/10 transition-shadow duration-300"
-          >
+          <div className="border-2 border-dashed theme-border-color rounded-md p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
-                <MessageCircle size={24} />
-              </div>
+              <div className="theme-text-accent flex-shrink-0"><MessageCircle size={24} /></div>
               <div>
                 <h3 className="text-xl font-semibold">Live Chat</h3>
-                <p className="text-gray-600 dark:text-gray-400">Available during business hours</p>
+                <p className="theme-text-secondary">Available during business hours</p>
               </div>
             </div>
-            <p className="theme-text">
+            <p className="theme-text-secondary">
               Get instant help for quick questions from our support team.
             </p>
-          </motion.div>
-        </motion.div>
-
-        {/* FAQ Section */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={sectionVariants}
-          custom={3}
-          className="rounded-2xl p-8 md:p-12 mb-16 border border-gray-200/50 dark:border-gray-700/50"
-        >
-          <div className="flex items-center gap-4 mb-8">
-            <HelpCircle className="text-blue-600" size={32} />
-            <h2 className="text-2xl md:text-3xl font-semibold">Frequently Asked Questions</h2>
           </div>
-
-          <div className="w-full space-y-4">
-            {faqItems.map((item, i) => (
-              <Disclosure key={i} as="div" className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                {({ open }) => (
-                  <>
-                    <Disclosure.Button className="flex w-full justify-between items-center py-4 text-left text-lg font-semibold theme-text transition-colors">
-                      <span>{item.question}</span>
-                      <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                        <ChevronDown className="h-5 w-5" />
-                      </motion.div>
-                    </Disclosure.Button>
-                    <AnimatePresence>
-                      {open && (
-                        <Disclosure.Panel
-                          static
-                          as={motion.div}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
-                          className="pb-4 pr-4 theme-text opacity-70"
-                        >
-                          {item.answer}
-                        </Disclosure.Panel>
-                      )}
-                    </AnimatePresence>
-                  </>
-                )}
-              </Disclosure>
-            ))}
-          </div>
-        </motion.div>
+        </div>
 
         {/* Contact Form Section */}
-        <motion.div
-          id="contact-form"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={sectionVariants}
-          custom={4}
-          className="backdrop-blur-sm rounded-2xl p-8 md:p-12 border theme-border shadow-xl shadow-blue-500/5"
-        >
+        <div id="contact-form" className="animated-section border-2 border-dashed theme-border-color rounded-md p-8 md:p-12">
           <h2 className="text-2xl md:text-3xl font-semibold mb-6">Send Us a Message</h2>
           <form className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
-              <input
-                type="text"
-                placeholder="Your Name"
-                className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-              <input
-                type="email"
-                placeholder="Your Email"
-                className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
+              <input type="text" placeholder="Your Name" required className="theme-input" />
+              <input type="email" placeholder="Your Email" required className="theme-input" />
             </div>
-            <input
-              type="text"
-              placeholder="Subject"
-              className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            />
-            <textarea
-              placeholder="Your Message"
-              rows={5}
-              className="w-full p-3 rounded-lg border theme-border theme-bg-subtle theme-text focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            ></textarea>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg flex items-center justify-center gap-2"
-            >
+            <input type="text" placeholder="Subject" required className="theme-input" />
+            <textarea placeholder="Your Message" rows={5} required className="theme-input"></textarea>
+            <button type="submit" className="border-dashed border-2 rounded py-2 inline-flex items-center gap-2 w-full justify-center hover:bg-white/5 duration-100 cursor-pointer theme-border-color-accent">
               <Send size={16} />
               Send Message
-            </motion.button>
+            </button>
           </form>
-        </motion.div>
+        </div>
 
-        {/* Support Hours Banner */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.8 }}
-          variants={sectionVariants}
-          custom={5}
-          className="mt-12 p-4 brand-bg rounded-lg flex items-center justify-center gap-3 text-center"
-        >
-          <Clock className="text-white" size={20} />
-          <p className="text-white">
-            <strong>Support Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM EST
-          </p>
-        </motion.div>
-      </motion.section>
+        <div className="animated-section mt-16 border-2 border-dashed theme-border-color rounded-md p-4 flex items-center justify-center gap-3 text-center">
+            <Clock className="theme-text-accent" size={20} />
+            <p className="theme-text-secondary">
+                <strong>Support Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM EST
+            </p>
+        </div>
+      </section>
     </div>
   )
 }

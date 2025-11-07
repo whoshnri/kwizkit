@@ -11,7 +11,7 @@ export async function fetchSettings(testId: string) {
     });
 
     if (test && test.settings) {
-      return {settings: test.settings, visibility: test.visibility };
+      return {settings: test.settings};
     }
 
     return { error: "Test not found or has no settings." };

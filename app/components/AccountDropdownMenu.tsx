@@ -3,12 +3,14 @@ import { useEffect } from "react";
 import { Menu } from "@headlessui/react";
 import Link from "next/link";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
-import { LogOut } from "lucide-react";
+import { LogOut} from "lucide-react";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
+import { KindeUser } from "@kinde-oss/kinde-auth-nextjs";
+import { User } from "@prisma/client";
 
 interface MenuProps {
-  session: any;
+    session: User;
 }
 
 export default function AccountDropdownMenu({ session }: MenuProps) {
@@ -18,16 +20,16 @@ export default function AccountDropdownMenu({ session }: MenuProps) {
   return (
     <div className="text-right z-50">
       <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button className="inline-flex items-center gap-2 theme-bg py-1.5 text-xs font-semibold theme-text focus:outline-none hover:bg-gray-800/70">
-          {session.picture ? (
+        <Menu.Button className="inline-flex items-center gap-2 theme-bg py-1.5 text-xs font-semibold theme-text focus:outline-none hover:bg-white/70 cursor-pointer">
+          {session.image ? (
             <img
-              src={session.picture}
-              className="w-7 h-7 rounded-full border-2 border-transparent hover:border-blue-500 transition-all"
-              alt="User profile"
+              src={session.image ?? ""}
+              className="w-9 h-9 rounded-full border-2 border-transparent hover:border-white transition-all"
+              alt={session.firstName || "User Avatar"}
             />
           ) : (
             <div className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-xs font-bold text-gray-700 dark:text-gray-300 border-2 border-transparent hover:border-blue-500 transition-all">
-              {session.given_name?.charAt(0).toUpperCase() || (
+              {session.firstName?.charAt(0).toUpperCase() || (
                 <UserIcon className="w-4 h-4" />
               )}
             </div>
@@ -48,19 +50,19 @@ export default function AccountDropdownMenu({ session }: MenuProps) {
               </Link>
             )}
           </Menu.Item>
-          {/* <Menu.Item>
+          <Menu.Item>
             {({ active }) => (
               <Link
-                href="/account"
+                href="/dashboard/account"
                 className={`flex items-center hover:theme-bg-subtle gap-2 rounded-lg px-3 py-2 transition-colors ${
                   active ? "theme-bg-subtle" : ""
                 }`}
               >
-                <User className="w-4 h-4" />
+                <UserIcon className="w-4 h-4" />
                 View Profile
               </Link>
             )}
-          </Menu.Item> */}
+          </Menu.Item>
           <Menu.Item>
             {({ active }) => (
               <p

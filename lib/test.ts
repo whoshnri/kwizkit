@@ -13,6 +13,7 @@ export type Test = {
   createdAt: Date;
   updatedAt: Date;
   createdById: string;
+  duration?: number;
   slug: string;
   settings: Settings
   visibility: boolean;

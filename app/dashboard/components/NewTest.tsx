@@ -1,203 +1,182 @@
 "use client";
+
 import React, { useState } from "react";
-import { useSession } from "../../SessionContext";
+import { useSession } from "@/app/SessionContext";
+import Modal from "./Modal";
+import FormField from "./FormFields";
+import { Loader2 } from "lucide-react";
+import { createTest } from "@/app/actions/testOps";
+import { Settings } from "@/lib/setting";
+import { toast } from "sonner";
 
-interface ToolbarProps {
-  setNewTest: React.Dispatch<React.SetStateAction<boolean>>;
-}
+type NewTestProps = {
+  setNewTest: (isOpen: boolean) => void;
+};
 
-export default function CreateTestPage({setNewTest} : ToolbarProps) {
-  const {session} = useSession()
-  const [form, setForm] = useState({
-    name: "",
-    subject: "",
-    totalMarks: 0,
-    numberOfQuestions: 0,
-    difficulty: "easy",
-    visibility: false,
-    description: "",
-  });
-  const [load, setLoading] = useState(false);
+const initialFormState = {
+  name: "",
+  subject: "",
+  difficulty: "easy",
+  visibility: false,
+  description: "",
+};
+
+const defaultSettings: Settings = {
+  general: {
+    shuffleQuestions: false,
+    shuffleOptions: false,
+  },
+  security: {
+    enableTabSwitching: false,
+    disableCopyPaste: false,
+  },
+  users: {
+    usersAdded: false,
+  },
+  testTime: 0,
+};
+
+export default function NewTest({ setNewTest }: NewTestProps) {
+  const { session } = useSession();
+  const [form, setForm] = useState(initialFormState);
+  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    // console.log(session)
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!form.name.trim() || !form.subject.trim()) {
-      setError("Please fill in all required fields");
+      setError("Test Name and Subject are required.");
       return;
     }
-
-    if (!session) {
-      setError("User not authenticated");
+    if (!session?.id) {
+      setError("Authentication error. Please sign in again.");
       return;
     }
 
     setLoading(true);
     setError("");
+
     try {
-      const res = await fetch("/api/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          createdById: session.sub,
-        }),
+      const response = await createTest({
+        name: form.name,
+        description: form.description || null,
+        subject: form.subject,
+        difficulty: form.difficulty as "easy" | "medium" | "hard",
+        visibility: form.visibility,
+        createdById: session.id,
+        settings: defaultSettings, 
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create test");
+
+      if (!response.status || response.status !== 201) {
+        toast.error(
+          response.message || "An unexpected error occurred while creating the test.",
+          {
+            description: response.metadata as string,
+          }
+        );
+        return;
+      }
+      toast.success(
+        response.message || "Test created successfully."
+      );
+      setNewTest(false);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
-      setNewTest(false);
-      window.location.reload();
-    }
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setNewTest(false)
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
-    >
-      <div className="theme-bg rounded shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="px-6 py-4 border-b theme-border dark:border-gray-700 flex items-center justify-between">
-          <h1 className="text-xl font-semibold theme-border">
-            Create New Test
-          </h1>
-          <button
-            onClick={() => setNewTest(false)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="px-6 py-4">
+    <Modal title="Create New Test" onClose={() => setNewTest(false)}>
+      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        <div className="space-y-4">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="p-3 theme-danger-bg border border-dashed theme-danger-border-color rounded-lg">
+              <p className="theme-danger-text text-sm">{error}</p>
             </div>
           )}
 
-          <div className="space-y-4">
-            {/* Test Name */}
-            <div>
-              <label className="block text-sm font-medium theme-text mb-1">
-                Test Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="name"
-                placeholder="Enter test name"
-                onChange={handleChange}
-                value={form.name}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-                required
-              />
-            </div>
+          <FormField
+            label="Test Name"
+            name="name"
+            placeholder="e.g., Chapter 5: Algebra Basics"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
 
-            {/* Subject */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Subject <span className="text-red-500">*</span>
-              </label>
-              <input
-                name="subject"
-                placeholder="Enter subject"
-                onChange={handleChange}
-                value={form.subject}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-                required
-              />
-            </div>
+          <FormField
+            label="Subject"
+            name="subject"
+            placeholder="e.g., Mathematics"
+            value={form.subject}
+            onChange={handleChange}
+            required
+          />
 
-            {/* Difficulty and Visibility - Side by side */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-1">
-                <label className="block text-sm font-medium mb-1">
-                  Difficulty
-                </label>
-                <select
-                  name="difficulty"
-                  onChange={handleChange}
-                  value={form.difficulty}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-              <div className="col-span-1">
-                <label className="block text-sm font-medium mb-1">
-
-                  Visibility
-                   <span className="text-red-500 ml-2">*</span>
-                   <sup className="ml-1 text-xs text-gray-400">(you can edit this later)</sup>
-
-                </label>
-                <input
-                  name="visibility"
-                  disabled
-                  value={form.visibility ? "Public" : "Private"}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400 disabled:cursor-not-allowed disabled:opacity-30 "
-                />
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Description
-              </label>
-              <textarea
-                name="description"
-                placeholder="Enter description (optional)"
-                onChange={handleChange}
-                value={form.description}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-bg theme-text theme-border placeholder-gray-500 dark:placeholder-gray-400"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              label="Difficulty"
+              name="difficulty"
+              type="select"
+              value={form.difficulty}
+              onChange={handleChange}
+              options={[
+                { value: "easy", label: "Easy" },
+                { value: "medium", label: "Medium" },
+                { value: "hard", label: "Hard" },
+              ]}
+            />
+            <FormField
+              label="Visibility"
+              name="visibility"
+              value={form.visibility ? "Public" : "Private"}
+              onChange={() => {}} // This is a no-op as the field is disabled
+              disabled
+              helpText="(Editable later)"
+            />
           </div>
+
+          <FormField
+            label="Description"
+            name="description"
+            type="textarea"
+            placeholder="A brief summary of what this test covers (optional)"
+            value={form.description}
+            onChange={handleChange}
+          />
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t theme-border flex justify-end space-x-3">
+        <div className="pt-6 mt-auto flex justify-end gap-3">
           <button
-            onClick={handleBackdropClick}
-            className="px-4 py-2 theme-bg rounded border theme-border cursor-pointer  hover:text-gray-900  transition-colors"
-            disabled={load}
+            type="button"
+            onClick={() => setNewTest(false)}
+            className="theme-button-secondary py-3 px-6"
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white cursor-pointer rounded font-medium transition-colors flex items-center space-x-2"
-            disabled={load}
+            type="submit"
+            className="theme-button-primary py-3 px-6"
+            disabled={isLoading}
           >
-            {load && (
-          <span className="loading loading-bars loading-sm"></span>
-
-            )}
-            <span>{load ? "Creating..." : "Create Test"}</span>
+            {isLoading && <Loader2 className="animate-spin mr-2" size={16} />}
+            {isLoading ? "Creating..." : "Create Test"}
           </button>
         </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }

@@ -1,29 +1,13 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Shield, Database, BookOpen, Clock, Mail, Info, FileText } from "lucide-react"
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Shield, Database, BookOpen, Clock, Mail, Info } from "lucide-react";
 
-// Framer Motion Variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut",
-    },
-  },
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
 }
 
 // Data for policy sections for cleaner JSX
@@ -37,7 +21,7 @@ const policySections = [
           At KwizKit, we collect information you provide directly to us, such as when you create an account, use our
           services, or contact us for support. This may include:
         </p>
-        <ul>
+        <ul className="list-disc space-y-2 pl-5 mt-4">
           <li>Your name, email address, and role (e.g., educator, student).</li>
           <li>Educational institution information.</li>
           <li>Content you create, including quizzes, questions, and other learning materials.</li>
@@ -53,7 +37,7 @@ const policySections = [
     content: (
       <>
         <p>We use the information we collect for the following purposes:</p>
-        <ul>
+        <ul className="list-disc space-y-2 pl-5 mt-4">
           <li>To provide, maintain, and improve our services.</li>
           <li>To power our AI features for test generation and performance analytics.</li>
           <li>To personalize your experience and provide relevant content.</li>
@@ -101,55 +85,72 @@ const policySections = [
     content: (
       <p>
         If you have any questions or concerns about this Privacy Policy or our data practices, please do not hesitate to
-        contact us at <a href="mailto:privacy@kwizkit.com">privacy@kwizkit.com</a> or through our support page.
+        contact us at <a href="mailto:support@kwizkit.com" className="theme-text-accent hover:underline">support@kwizkit.com</a> or through our support page.
       </p>
     ),
   },
 ];
 
 export default function PrivacyPolicyPage() {
+  const mainRef = useRef<HTMLDivElement>(null);
   const lastUpdated = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 
+  useGSAP(() => {
+    // Animate the title and container on page load
+    gsap.from([".page-title", ".policy-container"], {
+        opacity: 0,
+        y: 30,
+        duration: 0.7,
+        stagger: 0.2,
+        ease: 'power2.out'
+    });
+
+    // Stagger-animate each policy section as it scrolls into view
+    gsap.from(".policy-section", {
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power2.out',
+        scrollTrigger: {
+            trigger: ".policy-container",
+            start: "top 80%",
+        }
+    });
+
+  }, { scope: mainRef });
+
   return (
-    <div className="theme-bg theme-text min-h-screen py-16 md:py-24 px-6">
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={itemVariants}
-        className="max-w-4xl mx-auto"
-      >
-        <div className="mb-12 text-center">
-          <motion.h1
-            className="text-4xl md:text-5xl font-bold mb-4"
-          >
-            Privacy <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Policy</span>
-          </motion.h1>
-          <p className="text-gray-500 dark:text-gray-400">Last updated: {lastUpdated}</p>
+    <div ref={mainRef} className="theme-bg theme-text min-h-screen py-16 md:py-24 px-4 sm:px-6 lg:px-8">
+      <section className="max-w-4xl mx-auto">
+        <div className="page-title mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Privacy <span className="theme-text-accent">Policy</span>
+          </h1>
+          <p className="theme-text-secondary">Last updated: {lastUpdated}</p>
         </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="backdrop-blur-sm rounded-2xl p-8 md:p-12 border theme-border space-y-10"
-        >
-          {policySections.map((section) => (
-            <motion.section key={section.title} variants={itemVariants}>
+        <div className="policy-container border-2 border-dashed theme-border-color rounded p-8 md:p-12 space-y-10">
+          {policySections.map((section, idx) => (
+            <>
+            <section key={section.title} className="policy-section">
               <div className="flex items-center gap-4 mb-4">
-                <div className="brand-text dark:text-blue-400">{section.icon}</div>
+                <div className="theme-text-accent">{section.icon}</div>
                 <h2 className="text-2xl font-semibold theme-text">{section.title}</h2>
               </div>
-              <div className="prose prose-gray dark:prose-invert max-w-none prose-a:text-blue-600 hover:prose-a:text-blue-500 dark:prose-a:text-blue-400 dark:hover:prose-a:text-blue-300 prose-ul:list-disc prose-ul:pl-6 prose-li:my-1">
+              <div className="theme-text-secondary leading-relaxed">
                 {section.content}
               </div>
-            </motion.section>
+            </section>
+            {idx !== policySections.length - 1 && <div className="border-2 border-dashed theme-border-color"/>}
+            </>
           ))}
-        </motion.div>
-      </motion.section>
+        </div>
+      </section>
     </div>
-  )
+  );
 }

@@ -4,7 +4,7 @@ import Header from "./components/Header";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-      <div className="flex min-h-screen theme-bg-subtle p-1 gap-1">
+      <div className="flex min-h-screen theme-bg-subtle rounded p-1 gap-1">
         {/* Sidebar Navigation */}
         <aside className="w-fit h-full">
           <Sidebar />

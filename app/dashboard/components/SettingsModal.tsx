@@ -60,7 +60,6 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
     testTime: 200,
   });
 
-  const [published, setPublished] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -70,7 +69,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
       try {
         const bundle = await fetchSettings(testId);
-        const { settings, visibility } = bundle;
+        const { settings } = bundle;
 
         const data = settings as Settings;
 
@@ -78,7 +77,6 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
           ...prev,
           ...data,
         }));
-        setPublished(visibility || false);
       } catch (err) {
         console.error("Failed to fetch settings", err);
         setSettings((prev) => ({
@@ -100,7 +98,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const result = await saveSettings(testId, settings, published);
+      const result = await saveSettings(testId, settings);
       if ("error" in result) {
         console.error("Failed to save settings:", result.error);
       }
@@ -114,7 +112,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center theme-bg-subtle">
+      <div className="fixed inset-0 z-50 flex items-center justify-center theme-bg opacity-80 backdrop-blur-2xl">
         <div className="theme-bg rounded shadow-lg w-full max-w-2xl h-[80vh] flex items-center justify-center">
           <span className="loading loading-bars loading-xl" />
         </div>
@@ -124,7 +122,7 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="theme-bg theme-text rounded shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+      <div className=" theme-text rounded-2xl shadow-lg w-full max-w-md border-2 border-dashed max-h-[80vh] backdrop-blur-2xl overflow-y-auto theme-border-color">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold ">Test Settings</h2>
@@ -188,28 +186,13 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
           </div>
 
 
-          <div className="sticky bottom-2 theme-bg theme-border border-t pt-4">
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <Switch
-                  checked={published}
-                  onChange={setPublished}
-                  className={`${
-                    published ? "bg-blue-600" : "bg-gray-300"
-                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                >
-                  <span
-                    className={`${
-                      published ? "translate-x-6" : "translate-x-1"
-                    } inline-block h-4 w-4 transform bg-white rounded-full transition`}
-                  />
-                </Switch>
-                <span className="text-sm font-medium">Publish Test</span>
-              </label>
+          <div className="sticky bottom-2 pt-4">
+            <div className="flex items-center justify-center">
+              
               <button
                 type="submit"
                 disabled={saving}
-                className={`flex items-center gap-2 px-4 py-2 rounded text-white transition ${
+                className={`theme-button ${
                   saving
                     ? "bg-blue-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700"
