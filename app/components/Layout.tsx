@@ -76,7 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="theme-bg theme-border-color w-full border-b border-dashed">
         <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-4 sm:px-6 lg:px-8">
           <Link
-            href="/"
+            href="/prelaunch"
             className="text-2xl font-bold theme-text-accent"
           >
             KwizKit

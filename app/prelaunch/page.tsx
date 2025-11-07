@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import  banner from "@/public/banner.png";
 import {
   X,
   MessageCircle,
@@ -26,6 +27,7 @@ import { MdRocketLaunch } from "react-icons/md";
 import { addToWaitList } from "../actions/waitinglist";
 import { toast } from "sonner";
 import { set } from "lodash";
+import Image from "next/image";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -295,10 +297,14 @@ export default function PrelaunchPage() {
       <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="border-2 border-dashed theme-border-color rounded-md p-4">
-            <div className="w-full aspect-video theme-bg-subtle rounded-sm flex items-center justify-center">
-              <p className="theme-text-secondary text-sm">
-                [App Screenshot Placeholder]
-              </p>
+            <div className="w-full p-2 theme-bg-subtle rounded-sm flex items-center justify-center">
+              <Image
+                src={banner}
+                alt="KwizKit Screenshot"
+                width={1280}
+                height={720}
+                className="object-contain rounded-sm"
+              />
             </div>
           </div>
         </div>
