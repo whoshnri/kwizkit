@@ -1,11 +1,11 @@
 import { AlertCircle } from "lucide-react";
 
 const ErrorDisplay = ({ message }: { message: string }) => (
-  <div className="h-full w-full flex items-center justify-center p-4">
-    <div className="theme-danger-bg border-2 border-dashed theme-danger-border-color rounded-md p-6 text-center space-y-2 max-w-sm w-full">
-      <AlertCircle className="w-10 h-10 theme-danger-text mx-auto" />
-      <p className="theme-danger-text font-semibold">Error loading tests</p>
-      <p className="theme-danger-text text-sm">{message}</p>
+  <div className="flex h-full w-full items-center justify-center p-4">
+    <div className="w-full max-w-sm rounded-3xl border border-[rgba(180,35,24,0.2)] bg-[rgba(180,35,24,0.06)] p-6 text-center">
+      <AlertCircle className="mx-auto size-10 text-[var(--rubric-danger)]" />
+      <p className="mt-3 font-medium text-[var(--rubric-danger)]">Error loading tests</p>
+      <p className="mt-2 text-sm text-[var(--rubric-slate)]">{message}</p>
     </div>
   </div>
 );

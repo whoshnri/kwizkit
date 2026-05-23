@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { X, Upload, File, Save } from "lucide-react";
-import { Switch } from "@headlessui/react";
-import { saveSettings } from "@/app/actions/saveSettings";
-import { fetchSettings } from "@/app/actions/fetchSettings";
-import { Settings } from "@/lib/setting";
+import { PiFloppyDisk } from "react-icons/pi";
+import {
+  DashboardButton,
+  DashboardSwitch,
+  ResponsiveSheet,
+} from "./primitives";
+import { useSettingsModal } from "@/app/dashboard/hooks/useSettingsModal";
 
 interface SettingsProps {
   testId: string;
@@ -28,92 +29,21 @@ const SettingSwitch = ({
   ) => void;
 }) => {
   return (
-    <Switch
-      checked={value}
-      onChange={(checked) => onChange(section, keyName, checked)}
-      className={`${
-        value ? "bg-blue-600" : "bg-gray-300"
-      } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none `}
-    >
-      <span
-        className={`${
-          value ? "translate-x-6" : "translate-x-1"
-        } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-      />
-    </Switch>
+    <DashboardSwitch checked={value} onChange={(checked) => onChange(section, keyName, checked)} />
   );
 };
 
 const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
-  const [settings, setSettings] = useState<Settings>({
-    general: {
-      shuffleQuestions: false,
-      shuffleOptions: false,
-    },
-    security: {
-      enableTabSwitching: true,
-      disableCopyPaste: false,
-    },
-    users: {
-      usersAdded: false,
-    },
-    testTime: 200,
+  const close = () => setShowSettingsModal(false);
+  const { settings, saving, loading, updateSetting, handleSubmit } = useSettingsModal({
+    testId,
+    onClose: close,
   });
-
-  const [saving, setSaving] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const loadSettingsAndUsers = async () => {
-      if (!testId) return;
-
-      try {
-        const bundle = await fetchSettings(testId);
-        const { settings } = bundle;
-
-        const data = settings as Settings;
-
-        setSettings((prev) => ({
-          ...prev,
-          ...data,
-        }));
-      } catch (err) {
-        console.error("Failed to fetch settings", err);
-        setSettings((prev) => ({
-          ...prev,
-          users: {
-            ...prev.users,
-            usersAdded: false,
-          },
-        }));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSettingsAndUsers();
-  }, [testId]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const result = await saveSettings(testId, settings);
-      if ("error" in result) {
-        console.error("Failed to save settings:", result.error);
-      }
-    } catch (err: any) {
-      console.error("Unexpected error:", err.message);
-    } finally {
-      setSaving(false);
-      setShowSettingsModal(false);
-    }
-  };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center theme-bg opacity-80 backdrop-blur-2xl">
-        <div className="theme-bg rounded shadow-lg w-full max-w-2xl h-[80vh] flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="flex h-64 w-full max-w-md items-center justify-center rounded-2xl bg-white">
           <span className="loading loading-bars loading-xl" />
         </div>
       </div>
@@ -121,98 +51,72 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className=" theme-text rounded-2xl shadow-lg w-full max-w-md border-2 border-dashed max-h-[80vh] backdrop-blur-2xl overflow-y-auto theme-border-color">
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold ">Test Settings</h2>
-            <button
-              onClick={() => setShowSettingsModal(false)}
-              type="button"
-              className="p-2 rounded-full cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
-            >
-              <X className="w-5 h-5 " />
-            </button>
-          </div>
-
-          {/* General Settings */}
-          <div>
-            <h3 className="text-md font-semibold mb-2">General Settings</h3>
-            <div className="space-y-2">
-              {Object.entries(settings.general).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm capitalize">
-                    {key.replace(/([A-Z])/g, " $1")}
-                  </span>
-                  <SettingSwitch
-                    section="general"
-                    keyName={key}
-                    value={value}
-                    onChange={(section, key, val) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        [section]: { ...prev[section], [key]: val },
-                      }))
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Security Settings */}
-          <div>
-            <h3 className="text-md font-semibold mb-2">Security Settings</h3>
-            <div className="space-y-2">
-              {Object.entries(settings.security).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm capitalize">
-                    {key.replace(/([A-Z])/g, " $1")}
-                  </span>
-                  <SettingSwitch
-                    section="security"
-                    keyName={key}
-                    value={value}
-                    onChange={(section, key, val) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        [section]: { ...prev[section], [key]: val },
-                      }))
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-
-          <div className="sticky bottom-2 pt-4">
-            <div className="flex items-center justify-center">
-              
-              <button
-                type="submit"
-                disabled={saving}
-                className={`theme-button ${
-                  saving
-                    ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }`}
-              >
-                {saving ? (
-                  <span className="loading loading-bars loading-sm" />
-                ) : (
-                  <span className="flex gap-2 items-center">
-                    <Save className="w-4 h-4" />
-                    Save Settings
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ResponsiveSheet
+      title="Test Settings"
+      onClose={close}
+      className="md:max-w-[420px]"
+      footer={
+        <DashboardButton type="submit" form="settings-form" disabled={saving} className="w-full">
+          {saving ? (
+            "Saving..."
+          ) : (
+            <>
+              <PiFloppyDisk className="h-4 w-4" />
+              Save Settings
+            </>
+          )}
+        </DashboardButton>
+      }
+    >
+      <form onSubmit={handleSubmit} id="settings-form" className="space-y-5">
+        <SettingsSection
+          title="General Settings"
+          entries={settings.general}
+          section="general"
+          onChange={updateSetting}
+        />
+        <SettingsSection
+          title="Security Settings"
+          entries={settings.security}
+          section="security"
+          onChange={updateSetting}
+        />
+      </form>
+    </ResponsiveSheet>
   );
 };
 
 export default SettingsModal;
+
+function SettingsSection({
+  title,
+  entries,
+  section,
+  onChange,
+}: {
+  title: string;
+  entries: Record<string, boolean>;
+  section: "general" | "security";
+  onChange: (section: "general" | "security", key: string, value: boolean) => void;
+}) {
+  const labels: Record<string, string> = {
+    shuffleQuestions: "Shuffle questions",
+    shuffleOptions: "Shuffle options",
+    enableTabSwitching: "Enable tab switching",
+    disableCopyPaste: "Disable copy paste",
+  };
+
+  return (
+    <section className="space-y-3">
+      <h3 className="text-[15px] font-semibold text-[var(--rubric-black)]">{title}</h3>
+      {Object.entries(entries).map(([key, value]) => (
+        <div key={key} className="flex h-[42px] items-center justify-between">
+          <span className="text-sm font-medium text-[var(--rubric-black)]">
+            {labels[key] ?? key.replace(/([A-Z])/g, " $1")}
+          </span>
+          <SettingSwitch section={section} keyName={key} value={value} onChange={onChange} />
+        </div>
+      ))}
+    </section>
+  );
+}

@@ -6,17 +6,24 @@ import {
   useEffect,
   useState,
   useMemo,
+  useCallback,
 } from "react";
-import { useKindeBrowserClient, KindeUser } from "@kinde-oss/kinde-auth-nextjs";
-import { checkAccount } from "./actions/checkAccount";
-import { User } from "@prisma/client";
-import { Question, Test } from "./dashboard/tests/[test-name]/page";
+import { User } from "@/lib/generated/prisma/client";
+import type { Question } from "@/app/dashboard/hooks/useTestMaker";
+import type { AiImportMode } from "@/app/dashboard/lib/aiModal";
+
+type GeneratedContentPayload = {
+  questions: Question[];
+  importMode: AiImportMode;
+} | null;
 
 type SessionContextType = {
   session: User | null;
   loading: boolean;
-  generatedContent: Question[] | null;
-  updateGeneratedContent: (newContent: Question[] | null) => void;
+  onboardingRequired: boolean;
+  generatedContent: GeneratedContentPayload;
+  updateGeneratedContent: (newContent: GeneratedContentPayload) => void;
+  refreshSession: () => Promise<void>;
 };
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -24,56 +31,51 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 
 export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useKindeBrowserClient();
   const [session, setSession] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [ generatedContent, setGeneratedContent ] = useState<Question[] | null>(null);
+  const [onboardingRequired, setOnboardingRequired] = useState(false);
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContentPayload>(null);
 
+  const refreshSession = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/session", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      const account = data?.account ?? null;
+      setSession(account);
+      setOnboardingRequired(Boolean(data?.onboardingRequired));
+    } catch (error) {
+      console.error("Error fetching session:", error);
+      setSession(null);
+      setOnboardingRequired(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
+    void refreshSession();
+  }, [refreshSession]);
 
-    const fetchSession = async () => {
-      if (!user) {
-        if (active) {
-          setSession(null);
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const isAccount = await checkAccount(user.id);
-        if (active && isAccount) {
-          setSession(isAccount);
-        } else if (active && !isAccount) {
-          setSession(null);
-        }
-      } catch (error) {
-        console.error("Error fetching session:", error);
-        if (active) setSession(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSession();
-
-    return () => {
-      active = false;
-    };
-  }, [user?.id]); // only re-run when user identity changes
-
-  function updateGeneratedContent(newContent: Question[] | null) {
-    console.log("Updating generated content in context:");
-    // store in local storage
-    localStorage.setItem("generatedContent", JSON.stringify(newContent));
+  function updateGeneratedContent(newContent: GeneratedContentPayload) {
     setGeneratedContent(newContent);
   }
 
   const value = useMemo(
-    () => ({ session, loading, generatedContent, updateGeneratedContent }),
-    [session, loading, generatedContent]
+    () => ({
+      session,
+      loading,
+      onboardingRequired,
+      generatedContent,
+      updateGeneratedContent,
+      refreshSession,
+    }),
+    [session, loading, onboardingRequired, generatedContent, refreshSession]
   );
 
 

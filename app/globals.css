@@ -1,149 +1,293 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "daisyui";
-
-@import "tw-animate-css";
-
 
 :root {
-  --background-rgb: 2 6 23; /* Example: rgb(2, 6, 23) for deep blue */
-  --foreground-rgb: 229 231 235; /* Example: Light gray for text */
-  --accent-rgb: 59 130 246; /* Example: A brighter blue for accents */
-  --border-rgb: 45 55 72; /* A slightly lighter blue/gray for borders */
-  --background-subtle-rgb: 21 31 50;
-  --secondary-text-rgb: 156 163 175;
+  --rubric-black: #1c1c1c;
+  --rubric-slate: #4a4a4a;
+  --rubric-off-white: #f5f5f3;
+  --rubric-parchment: #e8e3d8;
+  --rubric-muted: #888780;
+  --rubric-border: #e0ddd6;
+  --rubric-success: #2f6b4f;
+  --rubric-warning: #a16207;
+  --rubric-danger: #b42318;
+
+  --background: var(--rubric-off-white);
+  --foreground: var(--rubric-black);
+  --surface: rgba(255, 255, 255, 0.75);
+  --surface-strong: rgba(255, 255, 255, 0.94);
+  --surface-muted: rgba(232, 227, 216, 0.72);
+  --border: var(--rubric-border);
+  --muted: var(--rubric-muted);
+  --ring: var(--rubric-black);
 }
 
-.theme-bg {
-  background-color: rgb(var(--background-rgb));
+.dark {
+  --background: #111111;
+  --foreground: #f5f5f3;
+  --surface: rgba(28, 28, 28, 0.78);
+  --surface-strong: rgba(28, 28, 28, 0.95);
+  --surface-muted: rgba(74, 74, 74, 0.55);
+  --border: rgba(224, 221, 214, 0.18);
+  --muted: rgba(245, 245, 243, 0.64);
+  --ring: #f5f5f3;
 }
-.theme-bg-subtle {
-  background-color: rgb(var(--background-subtle-rgb));
-}
-.theme-text {
-  color: rgb(var(--foreground-rgb));
-}
-.theme-text-secondary {
-  color: rgb(var(--secondary-text-rgb));
-}
-.theme-text-accent {
-  color: rgb(var(--accent-rgb));
-}
-.theme-border-color {
-  border-color: rgb(var(--border-rgb));
-}
-.theme-border-color-accent {
-  border-color: rgb(var(--accent-rgb));
+    
+html {
+  background: var(--background);
+  min-height: 100%;
+  font-size: 85%;
 }
 
-.theme-bg-accent {
-  background-color: rgb(var(--accent-rgb));
+button {
+  cursor: pointer;
 }
 
-/* For interactive links, where GSAP would handle the hover animation */
-.theme-text-interactive {
-  @apply text-gray-300; /* Base color */
-}
-/* GSAP would animate to this on hover: color: rgb(var(--accent-rgb)); */
-
-/* --- Uniform Button Style --- */
-.theme-button {
-  @apply bg-transparent text-sm font-semibold rounded-md border border-dashed;
-  color: rgb(var(--accent-rgb));
-  border-color: rgb(var(--accent-rgb));
-  padding: 1rem 1rem;
-}
-/* GSAP would animate background-color and color on hover */
-
-
-/* In your globals.css file */
-
-/* --- Uniform Button Styles --- */
-
-/* Base styles for all theme buttons */
-.theme-button-primary,
-.theme-button-secondary {
-  @apply  cursor-pointer text-sm font-semibold rounded-md border border-dashed flex items-center justify-center gap-2;
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(232, 227, 216, 0.75), transparent 28%),
+    radial-gradient(circle at top right, rgba(224, 221, 214, 0.6), transparent 24%),
+    var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Primary Button: Solid accent background */
-.theme-button-primary {
-  background-color: rgb(var(--accent-rgb));
-  color: rgb(var(--background-rgb)); /* Text color should contrast with accent */
-  border-color: rgb(var(--accent-rgb));
+::selection {
+  background: var(--rubric-black);
+  color: #fff;
 }
 
-/* Secondary Button: Transparent background with accent border/text */
-.theme-button-secondary {
-  background-color: transparent;
-  color: rgb(var(--accent-rgb));
-  border-color: rgb(var(--accent-rgb));
+a {
+  color: inherit;
 }
-
 
 @layer components {
-  .theme-input {
-    @apply p-3 rounded-md border-2 border-dashed bg-transparent;
-    border-color: rgb(var(--border-rgb));
-    color: rgb(var(--foreground-rgb));
-  }
-  
-  .theme-input:focus {
-    @apply outline-none;
-    border-color: rgb(var(--accent-rgb));
-  }
-}
-
-/* In :root inside globals.css */
-:root {
-  /* ... your existing variables */
-  --danger-rgb: 220 38 38; /* Example: rgb(220, 38, 38) for red-600 */
-  --danger-bg-rgb: 40 16 16; /* Example: A very dark red for the background */
-  --danger-border-rgb: 80 20 20; /* A darker, muted red for borders */
-}
-
-/* In component layers inside globals.css */
-@layer components {
-  /* ... your existing theme-button classes */
-
-  .theme-danger-bg {
-    background-color: rgb(var(--danger-bg-rgb));
-  }
-  .theme-danger-text {
-    color: rgb(var(--danger-rgb));
-  }
-  .theme-danger-border-color {
-    border-color: rgb(var(--danger-border-rgb));
+  .rubric-shell {
+    @apply mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8;
   }
 
-  /* Danger Button Style */
+  .rubric-page {
+    @apply relative overflow-hidden;
+  }
+
+  .rubric-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(28, 28, 28, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(28, 28, 28, 0.03) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), transparent 88%);
+  }
+
+  .rubric-card {
+    @apply rounded-2xl border;
+    background: var(--surface);
+    border-color: var(--border);
+    backdrop-filter: blur(0px);
+  }
+
+  .rubric-card-strong {
+    background: var(--surface-strong);
+    border-color: var(--border);
+  }
+
+  .rubric-card-muted {
+    background: var(--surface-muted);
+    border-color: var(--border);
+  }
+
+  .rubric-kicker {
+    /* Remove eyebrow/kicker texts globally as requested */
+    display: none !important;
+  }
+
+  .rubric-title {
+    @apply text-4xl font-medium tracking-[-0.03em] md:text-6xl;
+  }
+
+  .rubric-section-title {
+    @apply text-2xl font-medium tracking-[-0.02em] md:text-3xl;
+  }
+
+  .rubric-body {
+    color: var(--rubric-slate);
+  }
+
+  .rubric-muted {
+    color: var(--muted);
+  }
+
+  .rubric-divider {
+    border-color: var(--border);
+  }
+
+  .rubric-button-primary,
+  .rubric-button-secondary,
+  .rubric-button-ghost {
+    @apply inline-flex items-center cursor-pointer justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-150 active:scale-[0.98];
+  }
+
+  .rubric-button-primary {
+    background: var(--rubric-black);
+    color: white !important;
+  }
+
+  .rubric-button-primary:hover {
+    opacity: 0.92;
+  }
+
+  .rubric-button-secondary {
+    border: 1px solid var(--rubric-black);
+    color: var(--rubric-black) !important;
+    background: transparent;
+  }
+
+  .dark .rubric-button-secondary {
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+
+  .rubric-button-ghost {
+    color: var(--rubric-slate) !important;
+    background: transparent;
+  }
+
+  .rubric-button-ghost:hover {
+    background: rgba(28, 28, 28, 0.06);
+  }
+
+  /* Ensure explicit button color when someone overrides background (e.g. .bg-white) */
+  .rubric-button-primary.bg-white,
+  .rubric-button-primary.bg-[white] {
+    color: var(--rubric-black) !important;
+  }
+
+  .theme-button-primary {
+    color: #ffffff !important;
+  }
+
+  .theme-button-primary.bg-white,
+  .theme-button-primary.bg-[white] {
+    color: var(--rubric-black) !important;
+  }
+
+  .rubric-input {
+    @apply w-full rounded-xl border px-4 py-3 text-sm outline-none transition-colors;
+    background: var(--surface-strong);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+
+  .rubric-input:focus {
+    border-color: var(--rubric-black);
+    box-shadow: 0 0 0 2px rgba(28, 28, 28, 0.1);
+  }
+
+  .rubric-tag {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium;
+    border-color: var(--border);
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--rubric-slate);
+  }
+
+  .rubric-surface {
+    background: var(--surface-strong);
+    border-color: var(--border);
+  }
+
+  .theme-bg {
+    background: var(--background);
+  }
+
+  .theme-bg-subtle {
+    background: var(--surface-muted);
+  }
+
+  .theme-text {
+    color: var(--foreground);
+  }
+
+  .theme-text-secondary {
+    color: var(--muted);
+  }
+
+  .theme-text-accent {
+    color: var(--rubric-black);
+  }
+
+  .theme-border-color {
+    border-color: var(--border);
+  }
+
+  .theme-border-color-accent {
+    border-color: var(--rubric-black);
+  }
+
+  .theme-bg-accent {
+    background: var(--rubric-black);
+  }
+
+  .theme-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-150 active:scale-[0.98];
+    background: var(--rubric-black);
+    color: #ffffff;
+  }
+
+  .theme-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-150 active:scale-[0.98];
+    border: 1px solid var(--rubric-black);
+    color: var(--rubric-black);
+    background: transparent;
+  }
+
+  .dark .theme-button-secondary {
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+
   .theme-button-danger {
-    @apply flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-md border-2 border-dashed;
-    background-color: rgb(var(--danger-rgb));
-    color: rgb(var(--background-rgb)); /* Contrasting text, same as primary button */
-    border-color: rgb(var(--danger-rgb));
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-all duration-150 active:scale-[0.98];
+    background: var(--rubric-danger);
+    color: #ffffff;
   }
-}
 
-@layer components {
-  /* ... your existing .theme-input styles ... */
+  .theme-input {
+    @apply w-full rounded-xl border px-4 py-3 text-sm outline-none transition-colors;
+    background: var(--surface-strong);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+
+  .theme-input:focus {
+    border-color: var(--rubric-black);
+    box-shadow: 0 0 0 2px rgba(28, 28, 28, 0.1);
+  }
 
   .theme-select {
-    @apply bg-no-repeat;
-    background-color: rgb(var(--background-subtle-rgb));
-    /* Add a custom dropdown arrow using an SVG */
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-size: 1.5em 1.5em;
-    -webkit-appearance: none;
-    -moz-appearance: none;
+    @apply bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234a4a4a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.85rem center;
+    background-size: 1rem 1rem;
     appearance: none;
   }
 
-  /* Note: Styling <option> elements is notoriously inconsistent across browsers. */
-  /* This provides a basic background for compatibility where supported. */
-  .theme-select option {
-    background-color: rgb(var(--background-subtle-rgb));
-    color: rgb(var(--foreground-rgb));
+  .ai-assistant-sheet h2,
+  .ai-assistant-sheet h3,
+  .ai-assistant-sheet label,
+  .ai-assistant-sheet strong {
+    color: var(--rubric-black) !important;
+  }
+
+  .ai-assistant-sheet p,
+  .ai-assistant-sheet li,
+  .ai-assistant-sheet span {
+    color: var(--rubric-slate);
+  }
+
+  .ai-assistant-sheet button {
+    border-radius: 12px;
   }
 }

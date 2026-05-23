@@ -1,44 +1,20 @@
-import { run } from "@/app/actions/aiOps";
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  ChangeEvent,
-  DragEvent,
-  FC,
-  ReactNode,
-} from "react";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
-import { Test } from "../tests/[test-name]/page";
-import { useSession } from "@/app/SessionContext";
+"use client";
 
-type UseCase = "revise" | "create";
+import { FC, ReactNode } from "react";
+import {
+  DashboardButton,
+  DashboardField,
+  fieldClass,
+  ResponsiveSheet,
+  textareaClass,
+} from "./primitives";
+import { useAIContentModal } from "@/app/dashboard/hooks/useAIContentModal";
+import { AiModalStep, AiQuestion, AiQuestionType, AiUseCase } from "@/app/dashboard/lib/aiModal";
+import { CheckCircle2, FileText, PenLine, Sparkles, UploadCloud } from "lucide-react";
+import {PenNibIcon, UploadIcon} from "@phosphor-icons/react"
+import FlareIcon from '@mui/icons-material/Flare';
+import CircularProgress from "@mui/material/CircularProgress";
 
-type QuestionType =
-  | "multiple_choice"
-  | "short_answer"
-  | "essay"
-  | "true_or_false";
-
-type QuestionOptions = {
-  A?: string;
-  B?: string;
-  C?: string;
-  D?: string;
-};
-
-export type Question = {
-  id: string;
-  testId: string;
-  text: string;
-  type: QuestionType;
-  options: QuestionOptions;
-  correctOption?: number | null;
-  correctAnswer?: string | null;
-  marks: number;
-  explanation?: string | null;
-};
 
 interface AIContentModalProps {
   isOpen: boolean;
@@ -46,626 +22,527 @@ interface AIContentModalProps {
   currentContent?: string;
 }
 
-enum ModalStep {
-  Onboarding,
-  UseCaseSelection,
-  Configuration,
-  Loading,
-  Review,
-}
-
-const ReviseIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 mb-2 theme-text-accent"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"
-    />
-  </svg>
-);
-const CreateIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-8 w-8 mb-2 theme-text-accent"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-    />
-  </svg>
-);
-const InlineSpinner = () => (
-  <span className="loading loading-bars loading-lg" />
-);
+const InlineSpinner = () => <span className="loading loading-bars loading-lg" />;
 
 const AIContentModal: FC<AIContentModalProps> = ({
   isOpen,
   onClose,
   currentContent,
 }) => {
-  const { updateGeneratedContent } = useSession();
-  const [step, setStep] = useState<ModalStep>(ModalStep.Onboarding);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [useCase, setUseCase] = useState<UseCase>("create");
-  const [prompt, setPrompt] = useState("");
-  const [subject, setSubject] = useState("");
-  const [numQuestions, setNumQuestions] = useState(5);
-  const [fileContent, setFileContent] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
-
-  useEffect(() => {
-    if (localStorage.getItem("hideAIOnboarding") === "true") {
-      setStep(ModalStep.UseCaseSelection);
-    } else {
-      setStep(ModalStep.Onboarding);
-    }
-  }, []);
-
-  const resetState = useCallback(() => {
-    const shouldSkipOnboarding =
-      localStorage.getItem("hideAIOnboarding") === "true";
-    setStep(
-      shouldSkipOnboarding ? ModalStep.UseCaseSelection : ModalStep.Onboarding
-    );
-    setPrompt("");
-    setSubject("");
-    setNumQuestions(5);
-    setFileContent(null);
-    setFileName(null);
-    setDontShowAgain(false);
-    setGeneratedQuestions([]);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    onClose();
-    setTimeout(resetState, 300);
-  }, [onClose, resetState]);
-
-  const handleProceedFromOnboarding = useCallback(() => {
-    if (dontShowAgain) {
-      localStorage.setItem("hideAIOnboarding", "true");
-    }
-    setStep(ModalStep.UseCaseSelection);
-  }, [dontShowAgain]);
-
-  const handleSelectUseCase = useCallback(
-    (selectedUseCase: UseCase) => {
-      setUseCase(selectedUseCase);
-      if (selectedUseCase === "revise" && currentContent) {
-        setPrompt(currentContent);
-      } else {
-        setPrompt("");
-      }
-      setStep(ModalStep.Configuration);
-    },
-    [currentContent]
-  );
-
-  const processFile = useCallback((file: File | null) => {
-    if (!file) return;
-    if (file.type !== "text/plain") {
-      toast.error("Invalid file type. Please upload a .txt file.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setFileContent(e.target?.result as string);
-      setFileName(file.name);
-    };
-    reader.onerror = () =>
-      toast.error("Failed to read file. Please try again.");
-    reader.readAsText(file);
-  }, []);
-
-  const handleFileChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      processFile(e.target.files?.[0] ?? null);
-    },
-    [processFile]
-  );
-
-  const handleDrop = useCallback(
-    (e: DragEvent<HTMLLabelElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      processFile(e.dataTransfer.files?.[0] ?? null);
-    },
-    [processFile]
-  );
-
-  const handleDragEvents = useCallback((e: DragEvent<HTMLLabelElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setIsDragging(true);
-    } else if (e.type === "dragleave") {
-      setIsDragging(false);
-    }
-  }, []);
-
-  const parseAIResponse = (response: any): Question[] => {
-    if (!response || !Array.isArray(response.metadata)) {
-      console.error("Invalid AI response structure:", response);
-      return [];
-    }
-    return response.metadata.map((item: any) => ({
-      id: uuidv4(),
-      testId: "",
-      text: item.text || "",
-      type: item.type,
-      options: item.opt || {},
-      correctOption: item.correctOpt ?? item.correctOption,
-      correctAnswer: item.correctAnswer || null,
-      marks: 1,
-      explanation: item.explanation || null,
-    }));
-  };
-
-  const handleGenerate = useCallback(async () => {
-    if (!prompt.trim()) {
-      toast.error("Please provide a prompt to guide the AI.");
-      return;
-    }
-    setStep(ModalStep.Loading);
-
-    const fullPrompt = `
-      Subject: ${subject || "General"}
-      Number of Questions to Generate: ${numQuestions}
-      ---
-      User Prompt:
-      ${prompt}
-    `;
-
-    const response = await run(fullPrompt, fileContent || "");
-    console.log("AI Response:", response);
-
-    if (response && response.status === "error") {
-      toast.error("Generation Failed", { description: response.message });
-      console.error("Server error details:", response.details);
-      setStep(ModalStep.Configuration);
-    } else {
-      const parsedQuestions = parseAIResponse(response);
-      if (parsedQuestions.length === 0) {
-        toast.error("The AI returned an empty or invalid set of questions.");
-        setStep(ModalStep.Configuration);
-        return;
-      }
-      setGeneratedQuestions(parsedQuestions);
-      setStep(ModalStep.Review);
-      toast.success("Questions generated! Please review and edit below.");
-    }
-  }, [prompt, subject, numQuestions, fileContent]);
-
-  const handleQuestionChange = (
-    id: string,
-    field: keyof Question,
-    value: any
-  ) => {
-    setGeneratedQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, [field]: value } : q))
-    );
-  };
-
-  const handleOptionChange = (id: string, optionKey: string, value: string) => {
-    setGeneratedQuestions((prev) =>
-      prev.map((q) =>
-        q.id === id
-          ? { ...q, options: { ...q.options, [optionKey]: value } }
-          : q
-      )
-    );
-  };
-
-  const handleCorrectOptionChange = (id: string, newCorrectIndex: number) => {
-    setGeneratedQuestions((prev) =>
-      prev.map((q) =>
-        q.id === id ? { ...q, correctOption: newCorrectIndex } : q
-      )
-    );
-  };
-
-  const handleSave = useCallback(() => {
-    console.log("importing questions");
-    updateGeneratedContent(generatedQuestions);
-    handleClose();
-  }, [generatedQuestions, handleClose]);
+  const modal = useAIContentModal({ onClose, currentContent });
 
   if (!isOpen) return null;
 
-  const renderStepContent = (): ReactNode => {
-    switch (step) {
-      case ModalStep.Onboarding:
-        return (
-          <>
-            <h2 className="text-2xl font-bold text-gray-200">
-              How to Use the AI Assistant
-            </h2>
-            <div className="mt-4 text-gray-400 space-y-3">
-              <p>Welcome! Here’s a quick guide to get you started:</p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>
-                  <strong>Choose Your Goal:</strong> Select whether you want to
-                  revise existing text or create something new.
-                </li>
-                <li>
-                  <strong>Provide Context:</strong> Write a clear prompt to
-                  guide the AI. Be specific!
-                </li>
-                <li>
-                  <strong>(Optional) Upload Notes:</strong> For more detailed
-                  results, you can upload a <code>.txt</code> file with key
-                  points.
-                </li>
-              </ul>
-            </div>
-            <div className="mt-6 flex justify-between items-center">
-              <label className="flex items-center text-sm text-gray-400 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={dontShowAgain}
-                  onChange={(e) => setDontShowAgain(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="ml-2">Don't show this again</span>
-              </label>
-              <button
-                onClick={handleProceedFromOnboarding}
-                className="px-6 py-2 theme-button-primary text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75"
-              >
-                Get Started
-              </button>
-            </div>
-          </>
-        );
-      case ModalStep.UseCaseSelection:
-        return (
-          <>
-            <h2 className="text-2xl font-bold text-gray-200 text-center">
-              What would you like to do?
-            </h2>
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                onClick={() => handleSelectUseCase("revise")}
-                className="flex flex-col items-center p-6 border-2 theme-border-color rounded-lg hover:bg-white/10 transition-all duration-200"
-              >
-                <ReviseIcon />
-                <h3 className="font-semibold text-gray-200">Revise Content</h3>
-                <p className="text-sm text-gray-400 text-center mt-1">
-                  Enhance, shorten, or rephrase your current test.
-                </p>
-              </button>
-              <button
-                onClick={() => handleSelectUseCase("create")}
-                className="flex flex-col items-center p-6 border-2 theme-border-color rounded-lg hover:bg-white/10 transition-all duration-200"
-              >
-                <CreateIcon />
-                <h3 className="font-semibold text-gray-200">Create Content</h3>
-                <p className="text-sm text-gray-400 text-center mt-1">
-                  Generate fresh tests from a prompt or your notes.
-                </p>
-              </button>
-            </div>
-          </>
-        );
-      case ModalStep.Configuration:
-        return (
-          <>
-            <h2 className="text-2xl font-bold text-gray-200 capitalize">
-              {useCase} with AI
-            </h2>
-            <div className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="subject"
-                    className="block text-sm font-medium text-gray-300 mb-1"
-                  >
-                    Subject
-                  </label>
-                  <input
-                    id="subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="w-full p-2 rounded-md shadow-sm theme-input"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="numQuestions"
-                    className="block text-sm font-medium text-gray-300 mb-1"
-                  >
-                    Number of Questions
-                  </label>
-                  <input
-                    id="numQuestions"
-                    type="number"
-                    value={numQuestions}
-                    onChange={(e) => setNumQuestions(Number(e.target.value))}
-                    className="w-full p-2 rounded-md shadow-sm theme-input"
-                    min="1"
-                    max="20"
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="prompt"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  AI Prompt
-                </label>
-                <textarea
-                  id="prompt"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  rows={5}
-                  className="w-full p-2 theme-input rounded-md shadow-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Optional Guide (.txt)
-                </label>
-                <label
-                  onDrop={handleDrop}
-                  onDragOver={handleDragEvents}
-                  onDragEnter={handleDragEvents}
-                  onDragLeave={handleDragEvents}
-                  className={`flex justify-center w-full px-6 pt-5 pb-6 border-2 theme-border-color border-dashed rounded-md transition-colors ${
-                    isDragging
-                      ? "theme-bg-subtle border-indigo-400"
-                      : "hover:bg-white/10"
-                  }`}
-                >
-                  <div className="space-y-1 text-center">
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 48 48"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <div className="flex text-sm text-gray-600">
-                      <span className="relative font-medium text-indigo-600 hover:text-indigo-500">
-                        <span>Upload a file</span>
-                        <input
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          accept=".txt"
-                          onChange={handleFileChange}
-                          className="sr-only"
-                        />
-                      </span>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-gray-500">TXT up to 1MB</p>
-                  </div>
-                </label>
-                {fileName && (
-                  <p className="mt-2 text-sm text-green-600">
-                    File attached: {fileName}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={handleClose}
-                className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleGenerate}
-                className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700"
-              >
-                Generate
-              </button>
-            </div>
-          </>
-        );
-      case ModalStep.Loading:
-        return (
-          <div className="flex flex-col items-center justify-center py-20">
-            <InlineSpinner />
-            <h2 className="mt-4 text-xl font-semibold text-gray-200">
-              Generating Questions...
-            </h2>
-            <p className="mt-1 text-gray-400">
-              The AI is working its magic. Please wait.
-            </p>
-          </div>
-        );
-      case ModalStep.Review:
-        return (
-          <>
-            <h2 className="text-2xl font-bold text-gray-200">
-              Review & Edit Questions
-            </h2>
-            <div className="mt-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
-              {generatedQuestions.map((q, index) => (
-                <div
-                  key={q.id}
-                  className="p-4 rounded-lg border-2 theme-border-color theme-bg-subtle"
-                >
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Question {index + 1}
-                  </label>
-                  <textarea
-                    value={q.text}
-                    onChange={(e) =>
-                      handleQuestionChange(q.id, "text", e.target.value)
-                    }
-                    className="w-full p-2 theme-input rounded-md shadow-sm"
-                    rows={3}
-                  />
-                  {q.type === "multiple_choice" && (
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      {Object.entries(q.options).map(
-                        ([key, value], optIndex) => (
-                          <div key={key} className="flex items-center">
-                            <input
-                              type="radio"
-                              name={`correct_opt_${q.id}`}
-                              checked={q.correctOption === optIndex}
-                              onChange={() =>
-                                handleCorrectOptionChange(q.id, optIndex)
-                              }
-                              className="radio radio-primary"
-                            />
-                            <input
-                              type="text"
-                              value={value}
-                              onChange={(e) =>
-                                handleOptionChange(q.id, key, e.target.value)
-                              }
-                              className="ml-2 w-full p-2 theme-input rounded-md"
-                            />
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                  {q.type === "true_or_false" && (
-                    <div className="mt-3 flex space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`correct_opt_${q.id}`}
-                          className="radio radio-primary"
-                          checked={q.correctOption === 0}
-                          onChange={() => handleCorrectOptionChange(q.id, 0)}
-                        />
-                        <span className="ml-2">True</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`correct_opt_${q.id}`}
-                          className="radio radio-primary"
-                          checked={q.correctOption === 1}
-                          onChange={() => handleCorrectOptionChange(q.id, 1)}
-                        />
-                        <span className="ml-2">False</span>
-                      </label>
-                    </div>
-                  )}
-                  {(q.type === "short_answer" || q.type === "essay") && (
-                    <div className="mt-3">
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Correct Answer
-                      </label>
-                      <input
-                        type="text"
-                        value={q.correctAnswer ?? ""}
-                        onChange={(e) =>
-                          handleQuestionChange(
-                            q.id,
-                            "correctAnswer",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-2 theme-input rounded-md"
-                      />
-                    </div>
-                  )}
-                  <div className="mt-3">
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Explanation
-                    </label>
-                    <textarea
-                      value={q.explanation ?? ""}
-                      onChange={(e) =>
-                        handleQuestionChange(
-                          q.id,
-                          "explanation",
-                          e.target.value
-                        )
-                      }
-                      className="w-full p-2 theme-input rounded-md"
-                      rows={2}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={handleClose}
-                className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300"
-              >
-                Discard
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700"
-              >
-                Import
-              </button>
-            </div>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/10  transition-opacity"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
+    <ResponsiveSheet
+      title="AI Assistant"
+      onClose={modal.close}
+      className="md:max-w-3xl"
     >
-      <div className="relative theme-bg theme-border-color border-2 border-dashed rounded-lg shadow-xl w-full max-w-3xl mx-4 p-6 sm:p-8 transform transition-all">
-        {step !== ModalStep.Loading && (
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
-          >
-            <svg
-              className="h-6 w-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        )}
-        {renderStepContent()}
+      <div className="space-y-6">
+        <StepContent modal={modal} />
       </div>
-    </div>
+    </ResponsiveSheet>
   );
 };
 
 export default AIContentModal;
+
+type ModalController = ReturnType<typeof useAIContentModal>;
+
+function StepContent({ modal }: { modal: ModalController }): ReactNode {
+  switch (modal.step) {
+    case AiModalStep.Onboarding:
+      return <OnboardingStep modal={modal} />;
+    case AiModalStep.UseCaseSelection:
+      return <UseCaseStep onSelect={modal.selectUseCase} />;
+    case AiModalStep.Configuration:
+      return <ConfigurationStep modal={modal} />;
+    case AiModalStep.Loading:
+      return <LoadingStep />;
+    case AiModalStep.Review:
+      return <ReviewStep modal={modal} />;
+    default:
+      return null;
+  }
+}
+
+function OnboardingStep({ modal }: { modal: ModalController }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--rubric-black)]">
+          <Sparkles className="h-5 w-5" />
+        </div>
+        <h2 className="text-2xl font-semibold text-[var(--rubric-black)]">
+          Create better questions with AI
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--rubric-slate)]">
+          Start with a goal, add the context you want Rubric to follow, then review
+          each generated question before importing it into your test.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+        <ul className="space-y-3 text-sm leading-6 text-[var(--rubric-slate)]">
+          <li>
+            <strong className="font-semibold text-[var(--rubric-black)]">Choose a goal.</strong>{" "}
+            Revise existing text or create fresh questions.
+          </li>
+          <li>
+            <strong className="font-semibold text-[var(--rubric-black)]">Add context.</strong>{" "}
+            Include the subject, count, and a clear prompt.
+          </li>
+          <li>
+            <strong className="font-semibold text-[var(--rubric-black)]">Attach notes.</strong>{" "}
+            Upload a <code>.txt</code> file when you want the output to follow source material.
+          </li>
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex cursor-pointer items-center text-sm font-medium text-[var(--rubric-slate)]">
+          <input
+            type="checkbox"
+            checked={modal.dontShowAgain}
+            onChange={(event) => modal.setDontShowAgain(event.target.checked)}
+            className="h-4 w-4 rounded border-[var(--border)] accent-[var(--rubric-black)]"
+          />
+          <span className="ml-2">Don't show this again</span>
+        </label>
+        <DashboardButton type="button" onClick={modal.proceedFromOnboarding}>
+          Get Started
+        </DashboardButton>
+      </div>
+    </div>
+  );
+}
+
+function UseCaseStep({ onSelect }: { onSelect: (useCase: AiUseCase) => void }) {
+  const options: Array<{
+    value: AiUseCase;
+    title: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
+    {
+      value: "revise",
+      title: "Revise Content",
+      description: "Improve, shorten, or rephrase questions already in this test.",
+      icon: PenNibIcon,
+    },
+    {
+      value: "create",
+      title: "Create Content",
+      description: "Generate a new question set from your prompt or uploaded notes.",
+      icon: FlareIcon,
+    },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-2xl font-semibold text-[var(--rubric-black)]">
+          What would you like to do?
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--rubric-slate)]">
+          Pick the workflow that matches the content you want to prepare.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {options.map(({ value, title, description, icon: Icon }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => onSelect(value)}
+            className="flex min-h-40 cursor-pointer flex-col items-start rounded-lg border border-[var(--border)] bg-[var(--surface-strong)] p-5 text-left transition hover:bg-[var(--surface-muted)]"
+          >
+            <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--rubric-black)]">
+              <Icon className="h-5 w-5" />
+            </span>
+            <h3 className="text-base font-semibold text-[var(--rubric-black)]">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--rubric-slate)]">
+              {description}
+            </p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConfigurationStep({ modal }: { modal: ModalController }) {
+  const questionTypeOptions: Array<{
+    value: AiQuestionType;
+    label: string;
+    description: string;
+    placeholder: string;
+  }> = [
+    {
+      value: "multiple_choice",
+      label: "Multiple choice",
+      description: "Four-option questions with one correct answer.",
+      placeholder: "e.g., focus on interpretation, not recall",
+    },
+    {
+      value: "true_or_false",
+      label: "True / false",
+      description: "Binary checks for facts, claims, or definitions.",
+      placeholder: "e.g., use nuanced statements students must evaluate",
+    },
+    {
+      value: "short_answer",
+      label: "Short answer",
+      description: "Brief written responses with an expected answer.",
+      placeholder: "e.g., ask for one-sentence explanations",
+    },
+    {
+      value: "essay",
+      label: "Essay",
+      description: "Longer prompts that test argument and structure.",
+      placeholder: "e.g., compare two themes with evidence",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold capitalize text-[var(--rubric-black)]">
+          {modal.useCase} with AI
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--rubric-slate)]">
+          Give Rubric the exact boundaries for the questions you want to generate.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <DashboardField label="Subject">
+            <input
+              id="subject"
+              value={modal.subject}
+              onChange={(event) => modal.setSubject(event.target.value)}
+              placeholder="e.g., Biology"
+              className={fieldClass}
+            />
+          </DashboardField>
+          <DashboardField label="Number of Questions">
+            <input
+              id="numQuestions"
+              type="number"
+              value={modal.numQuestions}
+              onChange={(event) => modal.setNumQuestions(Number(event.target.value))}
+              className={fieldClass}
+              min="1"
+              max="20"
+            />
+          </DashboardField>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <span className="mb-2 block text-xs font-bold text-[var(--rubric-muted)]">
+              Question Types
+            </span>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {questionTypeOptions.map((option) => {
+                const selected = modal.questionTypes.includes(option.value);
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => modal.toggleQuestionType(option.value)}
+                    className={`rounded-lg border p-4 text-left transition ${
+                      selected
+                        ? "border-[var(--rubric-black)] bg-[var(--surface-muted)]"
+                        : "border-[var(--border)] bg-[var(--surface-strong)] hover:bg-[var(--surface-muted)]"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[var(--rubric-black)]">
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                          selected
+                            ? "border-[var(--rubric-black)] bg-[var(--rubric-black)]"
+                            : "border-[var(--border)] bg-white"
+                        }`}
+                      >
+                        {selected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                      </span>
+                      {option.label}
+                    </span>
+                    <span className="mt-2 block text-sm leading-5 text-[var(--rubric-slate)]">
+                      {option.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {questionTypeOptions
+            .filter((option) => modal.questionTypes.includes(option.value))
+            .map((option) => (
+              <DashboardField key={option.value} label={`${option.label} guidance`}>
+                <input
+                  value={modal.questionTypeInstructions[option.value]}
+                  onChange={(event) =>
+                    modal.updateQuestionTypeInstruction(option.value, event.target.value)
+                  }
+                  placeholder={option.placeholder}
+                  className={fieldClass}
+                />
+              </DashboardField>
+            ))}
+        </div>
+
+        <DashboardField label="AI Prompt">
+          <textarea
+            id="prompt"
+            value={modal.prompt}
+            onChange={(event) => modal.setPrompt(event.target.value)}
+            placeholder="Describe the topic, grade level, format, and any rules the questions should follow."
+            rows={5}
+            className={textareaClass}
+          />
+        </DashboardField>
+
+        <div>
+          <span className="mb-2 block text-xs font-bold text-[var(--rubric-muted)]">
+            Optional Guide (.txt)
+          </span>
+          <label
+            onDrop={modal.handleDrop}
+            onDragOver={modal.handleDragEvents}
+            onDragEnter={modal.handleDragEvents}
+            onDragLeave={modal.handleDragEvents}
+            className={`flex min-h-40 w-full cursor-pointer items-center justify-center rounded-lg border border-dashed px-6 py-6 transition ${
+              modal.isDragging
+                ? "border-[var(--rubric-black)] bg-[var(--surface-muted)]"
+                : "border-[var(--border)] bg-[var(--surface-strong)] hover:bg-[var(--surface-muted)]"
+            }`}
+          >
+            <div className="space-y-2 text-center">
+              <UploadIcon className="mx-auto h-9 w-9 text-[var(--rubric-black)]" />
+              <div className="text-sm text-[var(--rubric-slate)]">
+                <span className="font-semibold text-[var(--rubric-black)]">Upload a file</span>{" "}
+                or drag and drop
+                <input
+                  id="file-upload"
+                  name="file-upload"
+                  type="file"
+                  accept=".txt"
+                  onChange={modal.handleFileChange}
+                  className="sr-only"
+                />
+              </div>
+              <p className="text-xs text-[var(--rubric-muted)]">TXT up to 1MB</p>
+            </div>
+          </label>
+          {modal.fileName && (
+            <p className="mt-2 flex items-center gap-2 text-sm font-medium text-[var(--rubric-success)]">
+              <CheckCircle2 className="h-4 w-4" />
+              File attached: {modal.fileName}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <DashboardButton type="button" variant="secondary" onClick={modal.close}>
+          Cancel
+        </DashboardButton>
+        <DashboardButton type="button" onClick={modal.generate}>
+          <FlareIcon className="h-4 w-4" />
+          Generate
+        </DashboardButton>
+      </div>
+    </div>
+  );
+}
+
+function LoadingStep() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20">
+      <CircularProgress size={40} color="inherit" className="text-[var(--rubric-black)]" aria-label="Loading…" />
+      <h2 className="mt-4 text-xl font-semibold text-[var(--rubric-black)]">
+        Generating questions...
+      </h2>
+      <p className="mt-1 text-sm text-[var(--rubric-slate)]">
+        The AI is preparing your draft.
+      </p>
+    </div>
+  );
+}
+
+function ReviewStep({ modal }: { modal: ModalController }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-[var(--rubric-black)]">
+          Review and edit questions
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--rubric-slate)]">
+          Check each answer and explanation before importing the set.
+        </p>
+      </div>
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+        <span className="mb-3 block text-xs font-bold text-[var(--rubric-muted)]">
+          Import Behavior
+        </span>
+        <div className="grid gap-3 md:grid-cols-2">
+          {[
+            {
+              value: "upsert" as const,
+              title: "Upsert",
+              description: "Update matching questions and add new ones.",
+            },
+            {
+              value: "append" as const,
+              title: "Append",
+              description: "Add every generated question to the current bank.",
+            },
+          ].map((option) => {
+            const selected = modal.importMode === option.value;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => modal.setImportMode(option.value)}
+                className={`rounded-lg border p-4 text-left transition ${
+                  selected
+                    ? "border-[var(--rubric-black)] bg-[var(--surface-strong)]"
+                    : "border-[var(--border)] bg-transparent hover:bg-[var(--surface-strong)]"
+                }`}
+              >
+                <span className="text-sm font-semibold text-[var(--rubric-black)]">
+                  {option.title}
+                </span>
+                <span className="mt-1 block text-sm leading-5 text-[var(--rubric-slate)]">
+                  {option.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-2">
+        {modal.generatedQuestions.map((question, index) => (
+          <QuestionReviewCard
+            key={question.id}
+            question={question}
+            index={index}
+            modal={modal}
+          />
+        ))}
+      </div>
+      <div className="flex justify-end gap-3">
+        <DashboardButton type="button" variant="secondary" onClick={modal.close}>
+          Discard
+        </DashboardButton>
+        <DashboardButton type="button" onClick={modal.importQuestions}>
+          <FileText className="h-4 w-4" />
+          Import
+        </DashboardButton>
+      </div>
+    </div>
+  );
+}
+
+function QuestionReviewCard({
+  question,
+  index,
+  modal,
+}: {
+  question: AiQuestion;
+  index: number;
+  modal: ModalController;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+      <label className="mb-2 block text-xs font-bold text-[var(--rubric-muted)]">
+        Question {index + 1}
+      </label>
+      <textarea
+        value={question.text}
+        onChange={(event) => modal.updateQuestion(question.id, "text", event.target.value)}
+        className={textareaClass}
+        rows={3}
+      />
+
+      {question.type === "multiple_choice" && (
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {Object.entries(question.options).map(([key, value], optionIndex) => (
+            <div key={key} className="flex items-center">
+              <input
+                type="radio"
+                name={`correct_opt_${question.id}`}
+                checked={question.correctOption === optionIndex}
+                onChange={() => modal.updateCorrectOption(question.id, optionIndex)}
+                className="h-4 w-4 accent-[var(--rubric-black)]"
+              />
+              <input
+                type="text"
+                value={value}
+                onChange={(event) => modal.updateOption(question.id, key, event.target.value)}
+                className={`ml-2 ${fieldClass}`}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {question.type === "true_or_false" && (
+        <div className="mt-3 flex space-x-4">
+          {[0, 1].map((value) => (
+            <label
+              key={value}
+              className="flex items-center text-sm font-medium text-[var(--rubric-black)]"
+            >
+              <input
+                type="radio"
+                name={`correct_opt_${question.id}`}
+                className="h-4 w-4 accent-[var(--rubric-black)]"
+                checked={question.correctOption === value}
+                onChange={() => modal.updateCorrectOption(question.id, value)}
+              />
+              <span className="ml-2">{value === 0 ? "True" : "False"}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {(question.type === "short_answer" || question.type === "essay") && (
+        <div className="mt-3">
+          <label className="mb-2 block text-xs font-bold text-[var(--rubric-muted)]">
+            Correct Answer
+          </label>
+          <input
+            type="text"
+            value={question.correctAnswer ?? ""}
+            onChange={(event) =>
+              modal.updateQuestion(question.id, "correctAnswer", event.target.value)
+            }
+            className={fieldClass}
+          />
+        </div>
+      )}
+
+      <div className="mt-3">
+        <label className="mb-2 block text-xs font-bold text-[var(--rubric-muted)]">
+          Explanation
+        </label>
+        <textarea
+          value={question.explanation ?? ""}
+          onChange={(event) =>
+            modal.updateQuestion(question.id, "explanation", event.target.value)
+          }
+          className={textareaClass}
+          rows={2}
+        />
+      </div>
+    </div>
+  );
+}

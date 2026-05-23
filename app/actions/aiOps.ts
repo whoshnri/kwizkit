@@ -1,10 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { StateGraph, START, END } from "@langchain/langgraph";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ChatOpenAI } from "@langchain/openai";
-import { de } from "zod/v4/locales";
 
 // ------------------------------
 // Zod Schema Definitions
@@ -80,46 +77,76 @@ const AIState = z.object({
 
 type AIStateType = z.infer<typeof AIState>;
 
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-pro",
-  temperature: 0.7, 
-  apiKey: process.env.GEMINI_API_KEY,
-}).withStructuredOutput(AIResponseSchema);
+const AI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+const AI_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS ?? 30_000);
+const MAX_CONTEXT_CHARS = Number(process.env.AI_MAX_CONTEXT_CHARS ?? 24_000);
+
+function createStructuredModel() {
+  return new ChatGoogleGenerativeAI({
+    model: AI_MODEL,
+    temperature: 0.5,
+    maxRetries: 0,
+    maxOutputTokens: 4096,
+    apiKey: process.env.GEMINI_API_KEY,
+  }).withStructuredOutput(AIResponseSchema);
+}
 
 const prepareStateNode = async (
   state: AIStateType
 ): Promise<Partial<AIStateType>> => {
   console.log("Preparing prompt and context for LLM...");
+  const trimmedContext = (state.textFileContext ?? "").slice(0, MAX_CONTEXT_CHARS);
+
   return {
     prompt: `Generate questions based on: ${state.prompt}`,
-    textFileContext: `\nUser Uploaded Context:\n${state.textFileContext}`,
+    textFileContext: trimmedContext ? `\nUser Uploaded Context:\n${trimmedContext}` : "",
   };
 };
 
 const generateResponseNode = async (
   state: AIStateType
 ): Promise<Partial<AIStateType>> => {
-  console.log("Generating structured AI response...");
+  console.log(`Generating structured AI response with ${AI_MODEL}...`);
   const fullPrompt = `${state.prompt}\n${state.textFileContext}`;
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => abortController.abort(), AI_TIMEOUT_MS);
 
-  const response = await model.invoke([
-    {
-      role: "system",
-      content:
-        "You are an expert AI question generator. Analyze the context and the user's request. Output a structured JSON array of diverse questions (multiple choice, short answer, essay, true/false).",
-    },
-    {
-      role: "user",
-      content: fullPrompt,
-    },
-  ]);
+  try {
+    const response = await createStructuredModel().invoke(
+      [
+        {
+          role: "system",
+          content:
+            "You are an expert AI question generator. Return exactly the requested number of questions as structured JSON. Use only the allowed question types from the user prompt. Follow the per-type guidance closely. Keep explanations concise.",
+        },
+        {
+          role: "user",
+          content: fullPrompt,
+        },
+      ],
+      { signal: abortController.signal }
+    );
 
-  return {
-    response,
-  };
+    return {
+      response,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
 };
 
-// --- REVISED `run` FUNCTION WITH ERROR HANDLING ---
+function isQuotaError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    (error as { status?: unknown }).status === 429
+  );
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof Error && error.name === "AbortError";
+}
 
 export async function run(initialPrompt: string, fileText: string) {
   try {
@@ -129,18 +156,13 @@ export async function run(initialPrompt: string, fileText: string) {
       response: null,
     };
 
-    const graph = new StateGraph(AIState)
-      .addNode("prepareState", prepareStateNode)
-      .addNode("generateResponse", generateResponseNode)
-      .addEdge(START, "prepareState")
-      .addEdge("prepareState", "generateResponse")
-      .addEdge("generateResponse", END)
-      .compile();
+    const preparedState = {
+      ...initialState,
+      ...(await prepareStateNode(initialState)),
+    };
+    const result = await generateResponseNode(preparedState);
 
-    // Run the state machine
-    const result = await graph.invoke(initialState);
-
-    console.log("✅ Graph Execution Complete. AI Response:");
+    console.log("✅ AI generation complete. AI Response:");
     console.dir(result.response, { depth: null });
 
     return {
@@ -151,7 +173,23 @@ export async function run(initialPrompt: string, fileText: string) {
 
   } catch (error) {
     // Log the detailed error on the server for debugging
-    console.error("❌ An error occurred during graph execution:", error);
+    console.error("❌ An error occurred during AI generation:", error);
+
+    if (isQuotaError(error)) {
+      return {
+        status: "error",
+        message: "The AI provider quota is exhausted for the current model. Try again later or switch the configured Gemini model/API plan.",
+        details: error instanceof Error ? error.message : "Gemini quota exceeded",
+      };
+    }
+
+    if (isAbortError(error)) {
+      return {
+        status: "error",
+        message: "The AI request took too long and was stopped. Try fewer questions or a shorter uploaded guide.",
+        details: `AI request exceeded ${AI_TIMEOUT_MS}ms`,
+      };
+    }
 
     // Return a structured, user-friendly error object to the frontend
     return {

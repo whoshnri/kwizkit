@@ -6,7 +6,9 @@ export type Test = {
   id: string;
   name: string;
   description: string | null;
-  subject: string;
+  subject: string | { name?: string | null } | null;
+  subjectId?: string | null;
+  subjectName?: string | null;
   totalMarks: number;
   numberOfQuestions: number;
   difficulty: "easy" | "medium" | "hard";

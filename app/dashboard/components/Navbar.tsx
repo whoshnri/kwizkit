@@ -1,57 +1,85 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { VscBook, VscGraph, VscHome } from "react-icons/vsc";
 import { usePathname } from "next/navigation";
-import { CiDatabase, CiSettings } from "react-icons/ci";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  PiBooks,
+  PiCertificate,
+  PiChalkboardTeacher,
+  PiFileArchive,
+  PiGraduationCap,
+  PiPlanet,
+  PiReceipt,
+  PiStudent,
+  PiUserCircleGear,
+  PiX,
+} from "react-icons/pi";
+import Image from "next/image";
+import { useSession } from "@/app/SessionContext";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: VscHome },
-  { label: "My Tests", href: "/dashboard/tests", icon: VscBook },
-  { label: "Results", href: "/dashboard/results", icon: VscGraph },
+  { label: "Dashboard", href: "/dashboard", icon: PiPlanet },
+  { label: "Tests", href: "/dashboard/tests", icon: PiBooks },
+  { label: "Students", href: "/dashboard/students", icon: PiStudent },
+  { label: "Classes", href: "/dashboard/classes", icon: PiChalkboardTeacher },
+  { label: "Subjects", href: "/dashboard/subjects", icon: PiGraduationCap },
+  { label: "Materials", href: "/dashboard/materials", icon: PiFileArchive },
+  { label: "Certificates", href: "/dashboard/certificates", icon: PiCertificate },
+  { label: "Transactions", href: "/dashboard/transactions", icon: PiReceipt },
+  { label: "Account", href: "/dashboard/account", icon: PiUserCircleGear },
 ];
 
-
-export default function Navbar() {
+export default function Navbar({
+  mobile = false,
+  onClose,
+}: {
+  mobile?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
-
+  const { session } = useSession();
+  const firstName = session?.firstName || "Henry";
 
   return (
-    <TooltipProvider>
-      <div
-        className={`rounded theme-bg h-full shadow-lg transition-all duration-300 ease-in-out z-50`}
-      >
-        <div className={`flex flex-col min-h-screen h-full py-6 px-2 items-center`}>
-          {/* Navigation Items */}
-          <div className={`flex flex-col gap-2 flex-1`}>
-            {navItems.map((item) => (
+    <div className="flex h-dvh w-[220px] flex-col bg-[var(--rubric-black)] px-5 py-6 text-white">
+      <div className="flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-3 overflow-hidden">
+          <Image src="/logo.svg" alt="Rubric" width={32} height={32} className="rounded-lg" />
+          <span className="text-[17px] font-semibold tracking-tight">Rubric</span>
+        </Link>
+        {mobile && (
+          <button type="button" onClick={onClose} className="rounded-full p-2 text-white/70">
+            <PiX className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto pt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="space-y-2">
+          {navItems.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+            return (
               <Link
                 href={item.href}
                 key={item.href}
-                className={`flex ${pathname === item.href ? 'brand-bg text-white' : ''} items-center gap-3 px-3 py-2 rounded-lg theme-text focus:outline-none focus:ring-2  transition duration-200`}
+                onClick={onClose}
+                className={`flex h-11 items-center gap-3 rounded-xl px-4 text-sm font-semibold transition-colors ${
+                  active ? "bg-white/10 text-white" : "text-white/65 hover:bg-white/5 hover:text-white"
+                }`}
               >
-                <Tooltip >
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center justify-center ">
-                      <item.icon className={`h-5 w-5 flex-shrink-0 ${pathname === item.href ? 'text-white' : ''}`} />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-white">
-                    <p className="text-black">{item.label}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <Icon className="h-5 w-5 shrink-0" />
+                <span>{item.label}</span>
               </Link>
-            ))}
-          </div>
-        </div>
+            );
+          })}
+        </nav>
       </div>
-    </TooltipProvider>
+
+      <div className="flex h-[58px] items-center gap-3 rounded-lg bg-white/10 px-3">
+        <div className="h-8 w-8 rounded-full bg-[#D9D9D9]" />
+        <span className="truncate text-sm font-semibold">{firstName}</span>
+      </div>
+    </div>
   );
 }

@@ -1,71 +1,47 @@
+// ============================================================
+// GENERATOR & DATASOURCE
+// ============================================================
+
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String    @id @default(cuid())
-  firstName String?
-  lastName  String?
-  email     String?   @unique
-  unique_id String?   @unique
-  image     String?
-  gender    Gender    @default(male)
-  phone     String?
-  city      String?
-  tests     Test[]
-  accountId String @unique
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
 
-  @@map("users")
-}
+// ============================================================
+// ENUMS
+// ============================================================
 
 enum Gender {
   male
   female
+  other
 }
 
-
-model Test {
-  id                String        @id @default(cuid())
-  name              String
-  description       String?
-  subject           String
-  totalMarks        Int?
-  numberOfQuestions Int?
-  difficulty        Difficulty    @default(easy)
-  slug              String        @unique
-  settings          Json
-  visibility        Boolean       @default(false)
-  createdById       String
-  duration          Int?
-  createdBy         User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  questions         Question[]
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  @@index([createdById])
+enum Level {
+  // Secondary School
+  jss1
+  jss2
+  jss3
+  ss1
+  ss2
+  ss3
+  // Tertiary
+  nd1
+  nd2
+  hnd1
+  hnd2
+  level_100
+  level_200
+  level_300
+  level_400
+  level_500
+  postgraduate
 }
-
-model Question {
-  id            String       @id @default(cuid())
-  text          String
-  type          QuestionType
-  options       Json?
-  correctOption Int?
-  correctAnswer String?
-  marks         Int
-  explanation   String?
-
-  testId String
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-}
-
 
 enum Difficulty {
   easy
@@ -78,4 +54,452 @@ enum QuestionType {
   short_answer
   essay
   true_or_false
+}
+
+enum TransactionType {
+  dr
+  cr
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+enum MaterialType {
+  slide
+  note
+  video
+  audio
+  document
+  link
+  other
+}
+
+enum Plan {
+  solo_paygo
+  solo_starter
+  solo_growth
+  inst_starter
+  inst_school
+  inst_campus
+  inst_enterprise
+}
+
+
+// ============================================================
+// USER (admin / lecturer / system user)
+// ============================================================
+
+model User {
+  id        String  @id @default(cuid())
+  firstName String?
+  lastName  String?
+  email     String? @unique
+  uniqueId  String? @unique @map("unique_id")
+  image     String?
+  gender    Gender  @default(male)
+  phone     String?
+  city      String?
+  accountId String  @unique
+
+  plan              Plan      @default(solo_paygo)
+  aiTokensRemaining Int       @default(0)
+  planExpiresAt     DateTime?
+
+  walletId String? @unique
+  wallet   Wallet? @relation(fields: [walletId], references: [id], onDelete: NoAction)
+
+  tests              Test[]
+  subjectsCreated    Subject[]
+  studentsCreated    Student[]
+  classListsCreated  ClassList[]
+  certificationsCreated Certification[]
+  attendanceSessions AttendanceSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+
+// ============================================================
+// WALLET & TRANSACTIONS
+// ============================================================
+
+model Wallet {
+  id           String        @id @default(cuid())
+  name         String
+  balance      Int           @default(0)
+  transactions Transaction[]
+  user         User?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id       String          @id @default(cuid())
+  walletId String
+  wallet   Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount   Int
+  type     TransactionType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([walletId])
+  @@map("transactions")
+}
+
+
+// ============================================================
+// STUDENT
+// ============================================================
+
+model Student {
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  phone         String?
+  gender        Gender    @default(male)
+  image         String?
+  level         Level
+  studentId     String?   @unique  // matric / reg number
+  dateOfBirth   DateTime?
+  address       String?
+  guardianName  String?
+  guardianPhone String?
+  isActive      Boolean   @default(true)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  classLists         ClassListStudent[]
+  subjectEnrollments StudentSubject[]
+  testScores         TestScore[]
+  liveAttempts       LiveTestAttempt[]
+  attendanceRecords  AttendanceRecord[]
+  certifications     StudentCertification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+  @@map("students")
+}
+
+
+// ============================================================
+// CLASS LIST
+// ============================================================
+
+model ClassList {
+  id          String   @id @default(cuid())
+  name        String                     // e.g. "SS2 - 2024/2025"
+  description String?
+  level       Level
+  session     String?                    // e.g. "2024/2025"
+  isActive    Boolean  @default(true)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  students           ClassListStudent[]
+  subjects           Subject[]
+  attendanceSessions AttendanceSession[]
+
+  assignedTests      Test[]   @relation("TestToClassList")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+  @@map("class_lists")
+}
+
+// join: student <-> classList
+model ClassListStudent {
+  id          String    @id @default(cuid())
+  classListId String
+  classList   ClassList @relation(fields: [classListId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now())
+
+  @@unique([classListId, studentId])
+  @@index([classListId])
+  @@index([studentId])
+  @@map("class_list_students")
+}
+
+
+// ============================================================
+// SUBJECT
+// ============================================================
+
+model Subject {
+  id          String  @id @default(cuid())
+  name        String
+  code        String  @unique            // e.g. "CSC301", "ENG-SS2"
+  description String?
+  level       Level
+  unit        Int     @default(2)        // credit units (use 1 for secondary)
+
+  classListId String
+  classList   ClassList @relation(fields: [classListId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: NoAction)
+
+  enrollments        StudentSubject[]
+  materials          SubjectMaterial[]
+  tests              Test[]
+  attendanceSessions AttendanceSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([classListId])
+  @@index([createdById])
+  @@map("subjects")
+}
+
+// join: student <-> subject enrollment
+model StudentSubject {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  enrolledAt DateTime @default(now())
+
+  @@unique([studentId, subjectId])
+  @@index([studentId])
+  @@index([subjectId])
+  @@map("student_subjects")
+}
+
+
+// ============================================================
+// SUBJECT MATERIALS
+// ============================================================
+
+model SubjectMaterial {
+  id        String       @id @default(cuid())
+  name      String
+  level     Level
+  type      MaterialType @default(document)
+  subjectId String
+  subject   Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  // stored as JSON array: [{ name, url, size, mimeType }]
+  files     Json       @default("[]")  // SQLite has no Json type — store as serialized JSON string
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subjectId])
+  @@map("subject_materials")
+}
+
+
+// ============================================================
+// TESTS (linked to a Subject)
+// ============================================================
+
+model Test {
+  id                String     @id @default(cuid())
+  name              String
+  description       String?
+  totalMarks        Int?
+  numberOfQuestions Int?
+  difficulty        Difficulty @default(easy)
+  slug              String     @unique
+  settings          String     @default("{}")  // SQLite: serialized String
+  visibility        Boolean    @default(false)
+  isScheduled       Boolean    @default(false)
+  startTime         DateTime?
+  duration          Int?       // minutes
+
+  subjectId   String?
+  subject  Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  assignedClasses ClassList[] @relation("TestToClassList")
+
+  questions     Question[]
+  testScores    TestScore[]
+  liveAttempts  LiveTestAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([subjectId])
+}
+
+model LiveTestAttempt {
+  id             String    @id @default(cuid())
+  testId         String
+  test           Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  passwordUsed   Boolean   @default(false)
+  setupCompleted Boolean   @default(false)
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  answers        String      @default("[]")
+  flagged        String      @default("[]")
+  score          Int?
+  totalMarks     Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([testId])
+  @@index([studentId])
+  @@map("live_test_attempts")
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  text          String
+  type          QuestionType
+  options       String?      // SQLite: serialized json array of option strings
+  correctOption Int?         // index into options (for multiple_choice)
+  correctAnswer String?      // for short_answer / true_or_false
+  marks         Int
+  explanation   String?
+  order         Int          @default(0)
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+}
+
+
+// ============================================================
+// TEST SCORES (per student, per test)
+// ============================================================
+
+model TestScore {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  testId     String
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  score      Int
+  totalMarks Int
+  passed     Boolean?
+  remarks    String?
+  gradedAt   DateTime?
+
+  // serialized JSON: [{ questionId, given, correct, marks }]
+  answers    String   @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, testId])
+  @@index([studentId])
+  @@index([testId])
+  @@map("test_scores")
+}
+
+
+// ============================================================
+// ATTENDANCE
+// ============================================================
+
+// One AttendanceSession = one class period = one column in the register
+// UI model: rows = students, columns = sessions → tick present/absent per cell
+model AttendanceSession {
+  id          String    @id @default(cuid())
+  title       String?                        // e.g. "Week 3 - Monday"
+  date        DateTime
+
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  classListId String
+  classList   ClassList @relation(fields: [classListId], references: [id], onDelete: Cascade)
+
+  conductedById String
+  conductedBy   User   @relation(fields: [conductedById], references: [id], onDelete: NoAction)
+
+  records     AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([classListId])
+  @@map("attendance_sessions")
+}
+
+// One row per student per session — the "cell" in the register
+model AttendanceRecord {
+  id        String           @id @default(cuid())
+  sessionId String
+  session   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status    AttendanceStatus @default(absent)
+  note      String?
+
+  @@unique([sessionId, studentId])   // one record per student per session
+  @@index([sessionId])
+  @@index([studentId])
+  @@map("attendance_records")
+}
+
+
+// ============================================================
+// CERTIFICATIONS
+// ============================================================
+
+model Certification {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  issuedBy    String?
+  issuedAt    DateTime @default(now())
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  students StudentCertification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+  @@map("certifications")
+}
+
+// join: student <-> certification (with per-student issue date + optional ref)
+model StudentCertification {
+  id              String        @id @default(cuid())
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  certificationId String
+  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+  issuedAt        DateTime      @default(now())
+  certificateRef  String?       // certificate number / ID for verification
+
+  @@unique([studentId, certificationId])
+  @@index([studentId])
+  @@index([certificationId])
+  @@map("student_certifications")
 }

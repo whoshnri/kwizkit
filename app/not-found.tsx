@@ -1,27 +1,17 @@
-"use client";
-
 import Link from "next/link";
-import Lottie from "lottie-react";
-import animationData from "../public/lottie/404.json";
 
 export default function NotFound() {
   return (
-    <div className="theme-bg flex items-center justify-center">
-      <div className="w-full theme-border text-center space-y-1">
-        {/* Lottie Animation */}
-        <div className="w-150 mx-auto">
-          <Lottie animationData={animationData} loop={true} autoplay={true} />
+    <div className="rubric-page flex min-h-screen items-center justify-center py-16">
+      <div className="rubric-shell max-w-lg text-center">
+        <div className="rubric-card p-10">
+          <p className="rubric-kicker mb-4">404</p>
+          <h1 className="rubric-title text-5xl">Page not found</h1>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-[var(--rubric-slate)]">Sorry, the page you&apos;re looking for doesn&apos;t exist or has been moved.</p>
+          <Link href="/" className="rubric-button-primary mt-8">
+            Go home
+          </Link>
         </div>
-        <p className="text-lg font-semibold theme-text">Page not found</p>
-        <p className="text-sm text-gray-500 mb-4">
-          Sorry, the page you&apos;re looking for doesn&apos;t exist or has been moved.
-        </p>
-        <Link
-          href="/"
-          className="inline-block theme-bg border-2 border-dashed theme-border-color theme-text px-6 py-2.5  rounded-md text-sm font-medium transition-colors active:scale-95 focus:outline-none"
-        >
-          Go Home
-        </Link>
       </div>
     </div>
   );

@@ -1,8 +1,6 @@
 // app/actions/fetchSettings.ts
 "use server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function fetchSettings(testId: string) {
   try {
@@ -11,7 +9,11 @@ export async function fetchSettings(testId: string) {
     });
 
     if (test && test.settings) {
-      return {settings: test.settings};
+      try {
+        return { settings: JSON.parse(test.settings) };
+      } catch {
+        return { settings: {} };
+      }
     }
 
     return { error: "Test not found or has no settings." };

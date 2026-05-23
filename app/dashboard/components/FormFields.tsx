@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { DashboardSelect } from "./DashboardDropdown";
 
 type FormFieldProps = {
   label: string;
@@ -32,13 +35,16 @@ export default function FormField({
     switch (type) {
       case "select":
         return (
-          <select name={name} className={commonClasses} {...props}>
-            {props.options?.map((option) => (
-              <option className="theme-bg" key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <DashboardSelect
+            value={String(props.value ?? "")}
+            disabled={props.disabled}
+            onValueChange={(value) =>
+              props.onChange({
+                target: { name, value },
+              } as React.ChangeEvent<HTMLSelectElement>)
+            }
+            options={props.options ?? []}
+          />
         );
       case "textarea":
         return (

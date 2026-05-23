@@ -1,23 +1,23 @@
 const SkeletonLoader = () => (
-    <div className="p-5 h-full theme-bg">
-      <div className="h-4 w-1/3 theme-bg-subtle rounded-md mb-4 animate-pulse" />
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="h-10 flex-1 theme-bg-subtle rounded-md animate-pulse" />
-        <div className="h-10 w-32 theme-bg-subtle rounded-md animate-pulse" />
+    <div className="space-y-4">
+      <div className="h-4 w-1/3 rounded-md bg-[rgba(28,28,28,0.08)] animate-pulse" />
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
+        <div className="h-10 flex-1 rounded-xl bg-[rgba(28,28,28,0.08)] animate-pulse" />
+        <div className="h-10 w-32 rounded-xl bg-[rgba(28,28,28,0.08)] animate-pulse" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="rounded-md border-2 border-dashed theme-border-color animate-pulse"
+            className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-strong)] animate-pulse"
           >
-            <div className="p-4 space-y-4">
-              <div className="h-4 w-1/4 theme-bg-subtle rounded-md" />
-              <div className="h-6 w-3/4 theme-bg-subtle rounded-md" />
-              <div className="h-4 w-1/2 theme-bg-subtle rounded-md" />
+            <div className="space-y-4 p-5">
+              <div className="h-4 w-1/4 rounded-md bg-[rgba(28,28,28,0.08)]" />
+              <div className="h-6 w-3/4 rounded-md bg-[rgba(28,28,28,0.08)]" />
+              <div className="h-4 w-1/2 rounded-md bg-[rgba(28,28,28,0.08)]" />
             </div>
-            <div className="p-2 border-t-2 border-dashed theme-border-color">
-              <div className="h-8 theme-bg-subtle rounded-md" />
+            <div className="border-t border-[var(--border)] p-3">
+              <div className="h-8 rounded-xl bg-[rgba(28,28,28,0.08)]" />
             </div>
           </div>
         ))}

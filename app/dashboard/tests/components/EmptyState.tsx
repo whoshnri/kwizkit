@@ -6,20 +6,20 @@ type EmptyStateProps = {
 };
 
 const EmptyState = ({ hasTests, onCreate }: EmptyStateProps) => (
-  <div className="animated-content text-center py-12">
-    <div className="mx-auto w-24 h-24 rounded-md flex items-center justify-center mb-4 border-2 border-dashed theme-border-color">
-      <FileText size={40} className="theme-text-secondary" />
+  <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-strong)] py-16 text-center">
+    <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl border border-[var(--border)] bg-[var(--surface-muted)]">
+      <FileText size={40} className="text-[var(--rubric-muted)]" />
     </div>
-    <h3 className="text-lg font-medium theme-text mb-2">
+    <h3 className="mb-2 text-lg font-medium text-[var(--rubric-black)]">
       {hasTests ? "No tests match your search" : "No tests created yet"}
     </h3>
-    <p className="theme-text-secondary mb-4">
+    <p className="mb-6 text-sm text-[var(--rubric-slate)]">
       {hasTests
         ? "Try adjusting your search or filter"
         : "Create your first test to get started"}
     </p>
     {!hasTests && (
-      <button onClick={onCreate} className="theme-button-primary w-fit py-3 px-2">
+      <button onClick={onCreate} className="rubric-button-primary mx-auto">
         Create Your First Test
       </button>
     )}

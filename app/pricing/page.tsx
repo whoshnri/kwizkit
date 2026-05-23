@@ -1,208 +1,264 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Check, ArrowRight } from "lucide-react";
-import CheckoutModal from "./components/CheckoutModal";
+import { useMemo, useState } from "react";
+import { ArrowRight, Mail, MessageCircle, PhoneCall } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { HelpContactSection, RubricButton } from "@/components/site";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+type Track = "solo" | "institution";
+type Currency = "NGN" | "USD";
 
-type Plan = {
-  name: string,
-  description : string,
-  price : {monthly : string , annually : string},
-  priceIds : {
-    monthly : string,
-    annually : string
-  },
-  features : string[],
-  popular? : boolean
+type PricingPlan = {
+  id: string;
+  name: string;
+  description?: string;
+  price: Record<Currency, string>;
+  subtitle: string;
+  features: string[];
+  recommended?: boolean;
+};
 
-}
-
-type BillingCycle = "monthly" | "annually"
-
-const plans: Plan[] = [
+const soloPlans: PricingPlan[] = [
   {
-    name: "Free",
-    description: "Perfect for trying out KwizKit",
-    price: { monthly: "Free", annually: "Free" },
-    priceIds: { monthly: "price_free_monthly", annually: "price_free_annually" },
-    features: ["5 tests per month", "Basic question types", "Up to 30 students", "Email support"],
+    id: "solo_paygo",
+    name: "Pay As You Go",
+    price: { NGN: "₦0", USD: "$0" },
+    subtitle: "setup fee",
+    features: [
+      "₦500 per test created",
+      "₦200 per student added",
+      "₦1,500 per certificate",
+      "₦1,000 per 100k AI tokens",
+      "₦300 per 50MB+ upload"
+    ]
   },
   {
-    name: "Tutor+",
-    description: "Ideal for individual educators",
-    price: { monthly: "$19", annually: "$180" },
-    priceIds: { monthly: "price_tutor_monthly", annually: "price_tutor_annually" },
-    popular: true,
-    features: ["Unlimited tests", "All question types", "Up to 150 students", "Priority support", "Advanced analytics"],
+    id: "solo_starter",
+    name: "Starter",
+    price: { NGN: "₦5,000", USD: "$5" },
+    subtitle: "/month",
+    features: [
+      "Up to 50 students",
+      "10 tests per month",
+      "5GB Material storage",
+      "Basic AI generation",
+      "Email support"
+    ]
   },
   {
+    id: "solo_growth",
+    name: "Growth",
+    price: { NGN: "₦12,000", USD: "$12" },
+    subtitle: "/month",
+    recommended: true,
+    features: [
+      "Up to 200 students",
+      "Unlimited tests",
+      "20GB Material storage",
+      "Full AI Suite (Advanced)",
+      "Priority support"
+    ]
+  },
+];
+
+const institutionPlans: PricingPlan[] = [
+  {
+    id: "inst_starter",
+    name: "Starter",
+    price: { NGN: "₦50,000", USD: "$50" },
+    subtitle: "/month",
+    features: ["200 students", "5 staff", "500k AI tokens", "20GB", "Email support"]
+  },
+  {
+    id: "inst_school",
+    name: "School",
+    price: { NGN: "₦120,000", USD: "$120" },
+    subtitle: "/month",
+    recommended: true,
+    features: ["1,000 students", "20 staff", "2M AI tokens", "100GB", "WhatsApp support"]
+  },
+  {
+    id: "inst_campus",
+    name: "Campus",
+    price: { NGN: "₦250,000", USD: "$250" },
+    subtitle: "/month",
+    features: ["5,000 students", "Unlimited staff", "5M AI tokens", "500GB", "Account manager"]
+  },
+  {
+    id: "inst_enterprise",
     name: "Enterprise",
-    description: "For schools and institutions",
-    price: { monthly: "Custom", annually: "Custom" },
-    priceIds: { monthly: "price_enterprise_monthly", annually: "price_enterprise_annually" },
-    features: ["Everything in Tutor+", "Unlimited students", "Admin dashboard", "SSO integration", "Dedicated support"],
+    price: { NGN: "Custom", USD: "Custom" },
+    subtitle: "",
+    features: ["Unlimited students", "Unlimited staff", "Unlimited AI", "SLA + onsite support"]
   },
 ];
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [track, setTrack] = useState<Track>("solo");
+  const [currency, setCurrency] = useState<Currency>("NGN");
 
-  // GSAP animations for toggle and price changes
-  useGSAP(() => {
-    const isAnnual = billingCycle === "annually";
-    // Animate toggle handle
-    gsap.to(".toggle-handle", {
-      x: isAnnual ? "1.6rem" : "0.15rem",
-      duration: 0.3,
-      ease: "power2.inOut",
-    });
-    // Animate save badge
-    gsap.to(".save-badge", {
-      opacity:  1 ,
-      scale:  1 ,
-      duration: 0.3,
-      ease: "power2.out",
-      repeat: 1,
-      yoyo: true,
-    });
-
-    // Animate price text switch
-    const prices = gsap.utils.toArray<HTMLSpanElement>(".price-text");
-    prices.forEach(priceEl => {
-        const planName = priceEl.dataset.plan;
-        const plan = plans.find(p => p.name === planName);
-        if (plan) {
-            const newPrice = plan.price[billingCycle];
-            // Simple crossfade animation
-            gsap.to(priceEl, {
-                opacity: 0,
-                duration: 0.15,
-                onComplete: () => {
-                    priceEl.textContent = newPrice;
-                    gsap.to(priceEl, { opacity: 1, duration: 0.15 });
-                }
-            });
-        }
-    });
-
-  }, { dependencies: [billingCycle], scope: containerRef });
-
-  // GSAP scroll-triggered animations for cards
-  useGSAP(() => {
-    gsap.from(".pricing-card", {
-      opacity: 0,
-      y: 50,
-      stagger: 0.1,
-      duration: 0.8,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: ".pricing-grid",
-        start: "top 80%",
-      },
-    });
-  }, { scope: containerRef });
-
-
-  const handleSelectPlan = (plan: Plan) => {
-    if (plan.price.monthly !== "Custom") {
-      setSelectedPlan(plan);
-    } else {
-      window.location.href = "/support"; // Redirect to support for enterprise
-    }
-  };
-
-  const handleCloseModal = () => setSelectedPlan(null);
+  const activePlans = track === "solo" ? soloPlans : institutionPlans;
 
   return (
-    <>
-      <section ref={containerRef} className="theme-bg theme-text w-full py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Choose Your Plan</h1>
-            <p className="text-xl theme-text-secondary">Select the perfect plan for your educational needs.</p>
-          </div>
+    <div className="rubric-page py-16 md:py-24">
+      <div className="rubric-shell">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="rubric-kicker mb-4">Pricing</div>
+          <h1 className="rubric-title text-[clamp(2.75rem,7vw,5.5rem)]">Plans & Pricing</h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[var(--rubric-slate)]">Assessment infrastructure that scales with your institution.</p>
+        </div>
 
-          <div className="flex justify-center items-center gap-4 mb-12">
-            <span className="font-medium">Monthly</span>
-            <button
-              onClick={() => setBillingCycle(billingCycle === "monthly" ? "annually" : "monthly")}
-              className="relative flex items-center h-8 w-14 rounded-md border-2 border-dashed theme-border-color"
-            >
-              <span className="toggle-handle absolute inline-block h-6 w-6 rounded-sm theme-bg-accent" />
-            </button>
-            <span className="font-medium">Annually</span>
-            <span className="save-badge theme-text-accent text-xs font-semibold ml-2 border border-dashed p-1">{ billingCycle == "annually" ? 'SAVE 20%' : "Best Price"}</span>
-          </div>
-
-          <div className="pricing-grid grid sm:grid-cols-1 lg:grid-cols-3 gap-8">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`pricing-card relative flex flex-col theme-bg rounded-md p-8 border-2 border-dashed ${
-                  plan.popular ? "theme-accent-border-color" : "theme-border-color"
+        <div className="mt-12 flex flex-col items-center justify-center gap-6 sm:flex-row">
+          <div className="flex rounded-full border border-[var(--border)] bg-[#FAF8F3] p-1">
+            {(["solo", "institution"] as Track[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTrack(t)}
+                className={`rounded-full px-6 py-2 text-sm font-semibold transition-all ${
+                  track === t ? "bg-[var(--rubric-black)] text-white" : "text-[var(--rubric-muted)]"
                 }`}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="theme-accent-bg theme-bg text-xs font-semibold px-3 py-1 rounded-md">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
+                {t === "solo" ? "Solo Educator" : "Institution"}
+              </button>
+            ))}
+          </div>
 
-                <div className="flex-grow">
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <p className="theme-text-secondary mb-6 h-12">{plan.description}</p>
-
-                  <div className="mb-8">
-                    <span data-plan={plan.name} className="price-text text-4xl font-extrabold">
-                      {plan.price[billingCycle]}
-                    </span>
-                    {plan.price.monthly !== "Free" && plan.price.monthly !== "Custom" && (
-                      <span className="theme-text-secondary">
-                        {billingCycle === "monthly" ? "/month" : "/year"}
-                      </span>
-                    )}
-                  </div>
-
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-3">
-                        <Check size={20} className="theme-text-accent flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                { false && <button
-                  onClick={() => handleSelectPlan(plan)}
-                  className={`flex items-center justify-center gap-2 ${
-                    plan.popular ? "theme-button-primary" : "theme-button-secondary"
-                  }`}
-                >
-                  <span>{plan.name === "Enterprise" ? "Contact Sales" : "Choose Plan"}</span>
-                  {/* <ArrowRight size={16} /> */}
-                </button>}
-              </div>
+          <div className="flex rounded-full border border-[var(--border)] bg-[#FAF8F3] p-1">
+            {(["NGN", "USD"] as Currency[]).map((c) => (
+              <button
+                key={c}
+                onClick={() => setCurrency(c)}
+                className={`rounded-full px-6 py-2 text-sm font-semibold transition-all ${
+                  currency === c ? "bg-[var(--rubric-black)] text-white" : "text-[var(--rubric-muted)]"
+                }`}
+              >
+                {c}
+              </button>
             ))}
           </div>
         </div>
-      </section>
 
+        <div className={`mt-12 grid gap-6 ${track === "solo" ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
+          {activePlans.map((plan) => (
+            <article
+              key={plan.id}
+              className={`rubric-card flex flex-col p-8 transition-all ${
+                plan.recommended ? "border-2 border-[var(--rubric-black)] shadow-lg" : ""
+              }`}
+            >
+              {plan.recommended && (
+                <div className="mb-4 w-fit rounded-full bg-[var(--rubric-black)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                  Recommended
+                </div>
+              )}
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--rubric-muted)]">{plan.name}</h2>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-bold tracking-tight text-[var(--rubric-black)]">
+                  {plan.price[currency]}
+                </span>
+                <span className="text-sm text-[var(--rubric-muted)]">{plan.subtitle}</span>
+              </div>
 
-      {selectedPlan && (
-        <CheckoutModal plan={selectedPlan} billingCycle={billingCycle} onClose={handleCloseModal} />
-      )}
-    </>
+              <ul className="mt-8 flex-1 space-y-4">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <div className="mt-1 flex size-4 items-center justify-center rounded-full bg-green-100">
+                      <ArrowRight className="size-2.5 text-green-600" />
+                    </div>
+                    <span className="text-[var(--rubric-black)]">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <RubricButton
+                href={plan.name === "Enterprise" ? "/support" : "/auth"}
+                variant={plan.recommended ? "primary" : "secondary"}
+                className="mt-10 w-full"
+              >
+                {plan.name === "Enterprise" ? "Contact sales" : "Get started"}
+              </RubricButton>
+            </article>
+          ))}
+        </div>
+
+        {track === "solo" && (
+          <div className="mt-20">
+            <h3 className="text-2xl font-semibold text-[var(--rubric-black)]">Detailed Comparison</h3>
+            <div className="mt-8 overflow-x-auto rounded-3xl border border-[var(--border)] bg-white">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-[#FAF8F3]">
+                    <th className="px-8 py-5 text-sm font-bold uppercase tracking-wider text-[var(--rubric-black)]">Feature</th>
+                    <th className="px-8 py-5 text-center text-sm font-bold uppercase tracking-wider text-[var(--rubric-black)]">Pay As You Go</th>
+                    <th className="px-8 py-5 text-center text-sm font-bold uppercase tracking-wider text-[var(--rubric-black)]">Starter</th>
+                    <th className="px-8 py-5 text-center text-sm font-bold uppercase tracking-wider text-[var(--rubric-black)]">Growth</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {[
+                    ["Student Limit", "Unlimited (Pay-per)", "50", "200"],
+                    ["Monthly Tests", "Unlimited (Pay-per)", "10", "Unlimited"],
+                    ["AI Tokens", "Purchase-as-needed", "50k /mo", "500k /mo"],
+                    ["Storage", "₦300/upload (>50MB)", "5GB", "20GB"],
+                    ["Analytics", "Basic", "Basic", "Advanced"],
+                    ["Support", "Email", "Email", "Priority"],
+                  ].map(([label, paygo, starter, growth]) => (
+                    <tr key={label}>
+                      <td className="px-8 py-5 text-sm font-medium text-[var(--rubric-black)]">{label}</td>
+                      <td className="px-8 py-5 text-center text-sm text-[var(--rubric-slate)]">{paygo}</td>
+                      <td className="px-8 py-5 text-center text-sm text-[var(--rubric-slate)]">{starter}</td>
+                      <td className="px-8 py-5 text-center text-sm text-[var(--rubric-slate)]">{growth}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <HelpContactSection
+          eyebrow="Need help deciding?"
+          title="Talk through the right plan before you upgrade."
+          intro="If you’re comparing rollout options, we’ll help you pick the right setup for your team, budget, and delivery model."
+          badge="Support"
+          rows={[
+            {
+              icon: Mail,
+              label: "Write us an email",
+              value: "support@rubric.app",
+              href: "mailto:support@rubric.app",
+              helper: "Best for billing, setup, and plan questions.",
+            },
+            {
+              icon: MessageCircle,
+              label: "Request a walkthrough",
+              value: "Book a demo",
+              href: "/support",
+              helper: "See how Rubric fits your workflow before you buy.",
+            },
+            {
+              icon: PhoneCall,
+              label: "Talk to sales",
+              value: "Enterprise pricing",
+              href: "/support",
+              helper: "For campus-wide rollouts and custom controls.",
+            },
+          ]}
+        />
+
+        <div className="mt-16 rounded-[28px] bg-[var(--rubric-black)] px-6 py-10 text-white md:px-10">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="rubric-kicker mb-3 text-white/60">Enterprise</p>
+              <h2 className="text-2xl font-medium tracking-[-0.02em] md:text-3xl">Need more? Talk to us.</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">We can support multi-campus rollouts, custom integrations, and dedicated service agreements.</p>
+            </div>
+            <RubricButton href="/support" variant="inverse">
+              Contact sales
+            </RubricButton>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

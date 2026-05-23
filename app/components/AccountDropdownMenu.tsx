@@ -2,12 +2,11 @@
 import { useEffect } from "react";
 import { Menu } from "@headlessui/react";
 import Link from "next/link";
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
+// Replaced Kinde's LogoutLink with a local logout handler
 import { LogOut} from "lucide-react";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
-import { KindeUser } from "@kinde-oss/kinde-auth-nextjs";
-import { User } from "@prisma/client";
+import { User } from "@/lib/generated/prisma/client"
 
 interface MenuProps {
     session: User;
@@ -65,14 +64,22 @@ export default function AccountDropdownMenu({ session }: MenuProps) {
           </Menu.Item>
           <Menu.Item>
             {({ active }) => (
-              <p
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch(`/api/auth/logout`, { method: "POST" });
+                    window.location.href = "/";
+                  } catch (e) {
+                    console.error("Logout failed", e);
+                  }
+                }}
                 className={`flex items-center hover:theme-bg-subtle gap-2 rounded-lg px-3 py-2 transition-colors ${
                   active ? "bg-red-500 text-white cursor-pointer" : ""
                 }`}
               >
                 <LogOut className="w-4 h-4" />
-                <LogoutLink>Log out</LogoutLink>
-              </p>
+                Log out
+              </button>
             )}
           </Menu.Item>
         </Menu.Items>

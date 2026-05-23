@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import {Prisma} from "./generated/prisma/client";
 
 export interface Settings extends Prisma.JsonObject {
   general: {

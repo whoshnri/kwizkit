@@ -1,45 +1,25 @@
-import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { getUser } = getKindeServerSession();
-    const session = await getUser();
-
-    if (!session || !session.id) {
-      redirect("/auth?status=error");
+    // try a registration / create account method if available on the auth instance
+    if (auth && typeof (auth as any).register === "function") {
+      const payload = await request.json().catch(() => ({}));
+      const res = await (auth as any).register(payload, request);
+      if (res instanceof Response) return res;
+      return NextResponse.json(res ?? { status: "ok" });
     }
-    // check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: session.id },
-    });
 
-    if (user) {
-      redirect("/dashboard");
-    } else {
-      // create user
-      try {
-        const user = await prisma.user.create({
-          data: {
-            accountId: session.id,
-            firstName: session.given_name,
-            lastName: session.family_name,
-            email: session.email,
-            image: session.picture,
-            city: session.properties?.city,
-            unique_id: session.id + "-" + Date.now(),
-          },
-        });
-        redirect("/auth/onboarding");
-      } catch (e) {
-        console.error("Error creating user:", e);
-        redirect("/auth?status=error");
-      }
+    // fallback: delegate to generic handler
+    if (auth && typeof (auth as any).handleRequest === "function") {
+      const res = await (auth as any).handleRequest(request);
+      if (res instanceof Response) return res;
     }
   } catch (err) {
-    console.error("Error creating user/account:", err);
-    redirect("/auth?status=error");
+    console.error("self route error:", err);
+    return NextResponse.json({ status: "error", message: String(err) }, { status: 500 });
   }
+
+  return NextResponse.json({ status: "not_implemented" }, { status: 501 });
 }

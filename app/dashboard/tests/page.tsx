@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { PiMagnifyingGlass } from "react-icons/pi";
 import { useSession } from "@/app/SessionContext";
 import { Test } from "@/lib/test";
 import { fetchTests } from "@/app/actions/fetchUserTests";
@@ -18,6 +15,13 @@ import { toast } from "sonner";
 import EmptyState from "./components/EmptyState";
 import DeleteModal from "./components/DeleteModal";
 import { deleteTest } from "@/app/actions/testOps";
+import { DashboardField, fieldClass } from "../components/primitives";
+import { DashboardSelect } from "../components/DashboardDropdown";
+
+function getSubjectName(test: Test) {
+  if (typeof test.subject === "string") return test.subject;
+  return test.subjectName || test.subject?.name || "";
+}
 
 export default function TestList() {
   const [tests, setTests] = useState<Test[]>([]);
@@ -31,10 +35,7 @@ export default function TestList() {
   const [selectedTestId, setSelectedTestId] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  const router = useRouter();
   const { session } = useSession();
-
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const loadTests = useCallback(async () => {
     if (!session?.id) return;
@@ -46,7 +47,7 @@ export default function TestList() {
         setTests([]);
         return;
       }
-      setTests((result.tests ?? []) as Test[]);
+      setTests((result.tests ?? []) as unknown as Test[]);
     } catch (err: any) {
       setError(err?.message ?? "Failed to load tests");
     } finally {
@@ -91,7 +92,7 @@ export default function TestList() {
   const filteredTests = tests.filter(
     (test) =>
       (test.name.toLowerCase().includes(search.toLowerCase()) ||
-        test.subject.toLowerCase().includes(search.toLowerCase())) &&
+        getSubjectName(test).toLowerCase().includes(search.toLowerCase())) &&
       (filter === "all" || test.difficulty === filter)
   );
 
@@ -99,36 +100,33 @@ export default function TestList() {
   if (error) return <ErrorDisplay message={error} />;
 
   return (
-    <div
-      ref={containerRef}
-      className="theme-bg theme-text p-2 rounded-md h-full"
-    >
-      <p className="animated-content text-sm font-semibold p-2">
-        Manage and view all your created tests
-      </p>
-
-      <div className="animated-content mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 theme-text-secondary" />
-          <input
-            type="text"
-            placeholder="Search tests..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className=" pl-10 w-full theme-input"
+    <div className="space-y-8 pb-6">
+      <section className="grid gap-4 lg:grid-cols-2">
+        <DashboardField label="Search">
+          <div className="relative">
+            <PiMagnifyingGlass className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-[var(--rubric-muted)]" />
+            <input
+              type="text"
+              placeholder="Search tests..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`${fieldClass} pl-12`}
+            />
+          </div>
+        </DashboardField>
+        <DashboardField label="Difficulty">
+          <DashboardSelect
+            value={filter}
+            onValueChange={setFilter}
+            options={[
+              { value: "all", label: "All difficulty" },
+              { value: "easy", label: "Easy" },
+              { value: "medium", label: "Medium" },
+              { value: "hard", label: "Hard" },
+            ]}
           />
-        </div>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="theme-input"
-        >
-          <option className="theme-bg" value="all">All Difficulty</option>
-          <option className="theme-bg" value="easy">Easy</option>
-          <option className="theme-bg" value="medium">Medium</option>
-          <option className="theme-bg" value="hard">Hard</option>
-        </select>
-      </div>
+        </DashboardField>
+      </section>
 
       {filteredTests.length === 0 ? (
         <EmptyState
@@ -136,7 +134,7 @@ export default function TestList() {
           onCreate={() => setNewTestModalOpen(true)}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {filteredTests.map((test, index) => (
             <TestCard
               key={test.id}

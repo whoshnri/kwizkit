@@ -1,8 +1,7 @@
 "use server";
-import { PrismaClient} from "@prisma/client";
+import prisma from "@/lib/prisma";
 import {Settings} from "@/lib/setting"
 
-const prisma = new PrismaClient();
 
 export async function saveSettings(testId: string, settings: Settings){
   try {
@@ -14,7 +13,7 @@ export async function saveSettings(testId: string, settings: Settings){
       await prisma.test.update({
         where: { id: testId },
         data: {
-          settings: settings,
+          settings: JSON.stringify(settings),
         },
       });
       return { success: true };
