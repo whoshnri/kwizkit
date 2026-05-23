@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, ChevronRight, Menu, X } from "lucide-react";
+import { motion } from "framer-motion";
 import { RubricButton } from "./RubricButton";
 import { useSession } from "@/app/SessionContext";
 
@@ -109,16 +110,21 @@ export function SiteNavbar({
 
       {mounted && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: mobileOpen ? 1 : 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
             aria-hidden={!mobileOpen}
-            className={`absolute inset-0 bg-black/20 transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0"}`}
+            className="absolute inset-0 bg-black/20"
             onClick={() => setMobileOpen(false)}
           />
 
-          <div
+          <motion.div
             id="mobile-navigation"
-            className={`fixed left-0 right-0 top-0 transform transition-transform duration-300 ${mobileOpen ? "translate-y-0" : "-translate-y-full"
-              } flex h-[100dvh] bg-white flex-col px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-6`}
+            initial={{ y: "-100%" }}
+            animate={{ y: mobileOpen ? 0 : "-100%" }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed left-0 right-0 top-0 flex h-[100dvh] flex-col bg-white px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-6"
           >
             <div className="flex items-center justify-between gap-4">
               <Link href={logoHref} className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
@@ -150,9 +156,14 @@ export function SiteNavbar({
             </div>
 
             <nav className="mt-5 grid gap-2">
-              {desktopLinks.map((item) => (
-                <Link
+              {desktopLinks.map((item, index) => (
+                <motion.div
                   key={`${item.label}-${item.href}`}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: mobileOpen ? 0 : 10, opacity: mobileOpen ? 1 : 0 }}
+                  transition={{ duration: 0.22, delay: mobileOpen ? index * 0.035 : 0 }}
+                >
+                <Link
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className="flex h-16 items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 text-base font-medium text-[var(--rubric-black)]"
@@ -160,6 +171,7 @@ export function SiteNavbar({
                   <span>{item.label}</span>
                   <ChevronRight className="size-4 text-[var(--rubric-muted)]" />
                 </Link>
+                </motion.div>
               ))}
             </nav>
 
@@ -184,7 +196,7 @@ export function SiteNavbar({
                 </Link>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </header>

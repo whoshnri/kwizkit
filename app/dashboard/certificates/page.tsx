@@ -308,7 +308,7 @@ function CertificateCard({
 function CertificateInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
-      <p className="text-[11px] font-bold uppercase text-[var(--rubric-muted)]">
+      <p className="text-[11px] font-bold uppercasem text-[var(--rubric-muted)]">
         {label}
       </p>
       <p className="mt-1 truncate text-sm font-semibold text-[var(--rubric-black)]">

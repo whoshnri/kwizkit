@@ -1,6 +1,7 @@
 "use client";
 
 import { PiFloppyDisk } from "react-icons/pi";
+import { motion } from "framer-motion";
 import {
   DashboardButton,
   DashboardSwitch,
@@ -42,11 +43,23 @@ const SettingsModal = ({ testId, setShowSettingsModal }: SettingsProps) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-        <div className="flex h-64 w-full max-w-md items-center justify-center rounded-2xl bg-white">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      >
+        <motion.div
+          initial={{ y: 16, opacity: 0, scale: 0.96 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 12, opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className="flex h-64 w-full max-w-md items-center justify-center rounded-2xl bg-white"
+        >
           <span className="loading loading-bars loading-xl" />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 

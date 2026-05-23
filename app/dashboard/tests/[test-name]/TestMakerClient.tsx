@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   PiPlus,
   PiTrash,
@@ -620,7 +621,13 @@ function FloatingSaveBar({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <motion.div
+      initial={{ y: 40, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 40, opacity: 0 }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed inset-x-0 bottom-0 z-40"
+    >
       <div className="mx-auto w-full max-w-4xl p-4">
         <div className="flex max-sm:flex-col gap-3 items-center justify-between rounded-3xl border border-[var(--border)] bg-[var(--surface-strong)] p-4">
           <p className="text-sm font-medium md:text-base">
@@ -654,7 +661,7 @@ function FloatingSaveBar({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

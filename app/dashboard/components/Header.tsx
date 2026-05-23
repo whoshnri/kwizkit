@@ -1,38 +1,98 @@
 "use client";
 
 import Link from "next/link";
+import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  PiBooks,
-  PiCertificate,
-  PiChalkboardTeacher,
-  PiFileArchive,
-  PiGraduationCap,
   PiList,
   PiMagnifyingGlass,
   PiPlus,
   PiArrowClockwise,
-  PiReceipt,
-  PiStudent,
   PiX,
 } from "react-icons/pi";
 import NewTest from "./NewTest";
 import { useSession } from "../../SessionContext";
 import AIContentModal from "./Aimodal";
-import { DashboardButton } from "./primitives";
+import { DashboardButton, DashboardField, ResponsiveSheet, fieldClass } from "./primitives";
 import FlareIcon from '@mui/icons-material/Flare';
 import DashboardBreadcrumb from "./DashboardBreadcrumb";
 import { DashboardSearchResult, searchDashboard } from "@/app/actions/dashboardSearchOps";
+import { DashboardSelect } from "./DashboardDropdown";
+import { toast } from "sonner";
 import {
-  DashboardDropdown,
-  DashboardDropdownContent,
-  DashboardDropdownItem,
-  DashboardDropdownLabel,
-  DashboardDropdownSeparator,
-  DashboardDropdownTrigger,
-} from "./DashboardDropdown";
+  fetchClassLists,
+  fetchMaterials,
+  saveCertificate,
+  saveClassList,
+  saveMaterial,
+  saveStudent,
+  saveSubject,
+} from "@/app/actions/schoolOps";
+import { topUpWallet } from "@/app/actions/accountOps";
+import {
+  genderOptions,
+  labelize,
+  levelOptions,
+  materialTypeOptions,
+} from "../lib/schoolOptions";
+
+type HeaderCreateKind =
+  | "student"
+  | "class"
+  | "subject"
+  | "material"
+  | "certificate"
+  | "top-up";
+
+const emptyStudent = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  gender: "male",
+  image: "",
+  level: "ss1",
+  studentId: "",
+  dateOfBirth: "",
+  address: "",
+  guardianName: "",
+  guardianPhone: "",
+  isActive: true,
+};
+
+const emptyClass = {
+  name: "",
+  description: "",
+  level: "ss1",
+  session: "",
+  isActive: true,
+};
+
+const emptySubject = {
+  name: "",
+  code: "",
+  description: "",
+  level: "ss1",
+  unit: 2,
+  classListId: "",
+};
+
+const emptyMaterial = {
+  name: "",
+  level: "ss1",
+  type: "document",
+  subjectId: "",
+};
+
+const emptyCertificate = {
+  name: "",
+  description: "",
+  issuedBy: "",
+  issuedAt: "",
+};
 
 export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
@@ -43,6 +103,18 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<DashboardSearchResult[]>([]);
+  const [activeCreate, setActiveCreate] = useState<HeaderCreateKind | null>(null);
+  const [createSaving, setCreateSaving] = useState(false);
+  const [studentForm, setStudentForm] = useState<any>(emptyStudent);
+  const [classForm, setClassForm] = useState<any>(emptyClass);
+  const [subjectForm, setSubjectForm] = useState<any>(emptySubject);
+  const [materialForm, setMaterialForm] = useState<any>(emptyMaterial);
+  const [certificateForm, setCertificateForm] = useState<any>(emptyCertificate);
+  const [topUpAmount, setTopUpAmount] = useState(5000);
+  const [creationResources, setCreationResources] = useState<any>({
+    classes: [],
+    subjects: [],
+  });
   const { session, loading } = useSession();
   const isTestEditorRoute =
     pathname.startsWith("/dashboard/tests/") && pathname.split("/").length === 4;
@@ -106,21 +178,110 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
   const newItems = useMemo(
     () => [
-      { label: "Test", description: "Create a new assessment", href: null, icon: PiBooks, action: () => setNewTest(true) },
-      { label: "Student", description: "Add a learner record", href: "/dashboard/students", icon: PiStudent },
-      { label: "Class", description: "Create a class list", href: "/dashboard/classes", icon: PiChalkboardTeacher },
-      { label: "Subject", description: "Create a subject", href: "/dashboard/subjects", icon: PiGraduationCap },
-      { label: "Material", description: "Upload a dummy resource", href: "/dashboard/materials", icon: PiFileArchive },
-      { label: "Certificate", description: "Create an award record", href: "/dashboard/certificates", icon: PiCertificate },
-      { label: "Top-up", description: "Open wallet transactions", href: "/dashboard/transactions", icon: PiReceipt },
+      { value: "test", label: "Test" },
+      { value: "student", label: "Student" },
+      { value: "class", label: "Class" },
+      { value: "subject", label: "Subject" },
+      { value: "material", label: "Material" },
+      { value: "certificate", label: "Certificate" },
+      { value: "top-up", label: "Top-up" },
     ],
     []
   );
+
+  useEffect(() => {
+    if (!session?.id || !activeCreate) return;
+
+    let active = true;
+    async function loadCreationResources() {
+      if (activeCreate === "subject") {
+        const response = await fetchClassLists(session!.id);
+        if (!active) return;
+        if ("error" in response) toast.error(response.error);
+        else setCreationResources((current: any) => ({ ...current, classes: response.classLists ?? [] }));
+      }
+
+      if (activeCreate === "material") {
+        const response = await fetchMaterials(session!.id);
+        if (!active) return;
+        if ("error" in response) toast.error(response.error);
+        else setCreationResources((current: any) => ({ ...current, subjects: response.subjects ?? [] }));
+      }
+    }
+
+    void loadCreationResources();
+
+    return () => {
+      active = false;
+    };
+  }, [activeCreate, session?.id]);
 
   function openResult(result: DashboardSearchResult) {
     setSearchOpen(false);
     setSearchQuery("");
     router.push(result.href);
+  }
+
+  function openCreate(value: string) {
+    if (value === "test") {
+      setNewTest(true);
+      return;
+    }
+
+    if (value === "student") setStudentForm(emptyStudent);
+    if (value === "class") setClassForm(emptyClass);
+    if (value === "subject") setSubjectForm(emptySubject);
+    if (value === "material") setMaterialForm(emptyMaterial);
+    if (value === "certificate") {
+      setCertificateForm({
+        ...emptyCertificate,
+        issuedBy: [session?.firstName, session?.lastName].filter(Boolean).join(" "),
+      });
+    }
+    if (value === "top-up") setTopUpAmount(5000);
+
+    setActiveCreate(value as HeaderCreateKind);
+  }
+
+  async function submitHeaderCreate() {
+    if (!session?.id || !activeCreate) return;
+
+    setCreateSaving(true);
+    try {
+      const response =
+        activeCreate === "student"
+          ? await saveStudent(session.id, studentForm)
+          : activeCreate === "class"
+            ? await saveClassList(session.id, classForm)
+            : activeCreate === "subject"
+              ? await saveSubject(session.id, subjectForm)
+              : activeCreate === "material"
+                ? await saveMaterial(session.id, materialForm, null)
+                : activeCreate === "certificate"
+                  ? await saveCertificate(session.id, certificateForm)
+                  : await topUpWallet(session.id, topUpAmount);
+
+      if ("error" in response) {
+        toast.error(response.error);
+        return;
+      }
+
+      toast.success(response.message ?? "Created successfully");
+      setActiveCreate(null);
+      router.refresh();
+      if (
+        (activeCreate === "student" && pathname === "/dashboard/students") ||
+        (activeCreate === "class" && pathname === "/dashboard/classes") ||
+        (activeCreate === "subject" && pathname === "/dashboard/subjects") ||
+        (activeCreate === "material" && pathname === "/dashboard/materials") ||
+        (activeCreate === "certificate" && pathname === "/dashboard/certificates") ||
+        (activeCreate === "top-up" && pathname === "/dashboard/transactions")
+      ) {
+        window.location.reload();
+      }
+    } finally {
+      setCreateSaving(false);
+    }
   }
 
   return (
@@ -171,51 +332,27 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
               Reload
             </DashboardButton>
             {!isTestEditorRoute && (
-              <DashboardDropdown>
-                <DashboardDropdownTrigger asChild>
-                  <DashboardButton className="min-w-[120px]">
-                    <PiPlus className="h-5 w-5" />
-                    New
-                  </DashboardButton>
-                </DashboardDropdownTrigger>
-                <DashboardDropdownContent align="end" className="w-[280px]">
-                  <DashboardDropdownLabel>Create new</DashboardDropdownLabel>
-                  <DashboardDropdownSeparator />
-                  {newItems.map((item) => {
-                    const Icon = item.icon;
-                    const content = (
-                      <>
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#FAF8F3] text-[var(--rubric-black)]">
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block font-semibold text-[var(--rubric-black)]">{item.label}</span>
-                          <span className="block truncate text-xs text-[var(--rubric-muted)]">{item.description}</span>
-                        </span>
-                      </>
-                    );
-
-                    if (item.href) {
-                      return (
-                        <DashboardDropdownItem key={item.label} asChild>
-                          <Link href={item.href}>{content}</Link>
-                        </DashboardDropdownItem>
-                      );
-                    }
-
-                    return (
-                      <DashboardDropdownItem
-                        key={item.label}
-                        onSelect={() => {
-                          item.action?.();
-                        }}
-                      >
-                        {content}
-                      </DashboardDropdownItem>
-                    );
-                  })}
-                </DashboardDropdownContent>
-              </DashboardDropdown>
+              <div className="w-full sm:w-auto">
+                <DashboardSelect
+                  value=""
+                  placeholder="New"
+                  searchPlaceholder="Search creation..."
+                  maxMenuHeight={280}
+                  trigger={
+                    <DashboardButton className="w-full sm:w-auto">
+                      <PiPlus className="h-5 w-5" />
+                      New
+                    </DashboardButton>
+                  }
+                  options={newItems.map((item) => ({
+                    value: item.value,
+                    label: item.label,
+                  }))}
+                  onValueChange={(value) => {
+                    openCreate(value);
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>
@@ -224,17 +361,311 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
         <ProjectToolbar />
       )}
       {newTest && <NewTest setNewTest={setNewTest} />}
-      {searchOpen && (
-        <DashboardSearchOverlay
-          query={searchQuery}
-          setQuery={setSearchQuery}
-          results={searchResults}
-          searching={searching}
-          onClose={() => setSearchOpen(false)}
-          onOpenResult={openResult}
+      {activeCreate && (
+        <HeaderCreateSheet
+          kind={activeCreate}
+          saving={createSaving}
+          onClose={() => setActiveCreate(null)}
+          onSubmit={submitHeaderCreate}
+          studentForm={studentForm}
+          setStudentForm={setStudentForm}
+          classForm={classForm}
+          setClassForm={setClassForm}
+          subjectForm={subjectForm}
+          setSubjectForm={setSubjectForm}
+          materialForm={materialForm}
+          setMaterialForm={setMaterialForm}
+          certificateForm={certificateForm}
+          setCertificateForm={setCertificateForm}
+          topUpAmount={topUpAmount}
+          setTopUpAmount={setTopUpAmount}
+          classes={creationResources.classes}
+          subjects={creationResources.subjects}
         />
       )}
+      <AnimatePresence>
+        {searchOpen && (
+          <DashboardSearchOverlay
+            query={searchQuery}
+            setQuery={setSearchQuery}
+            results={searchResults}
+            searching={searching}
+            onClose={() => setSearchOpen(false)}
+            onOpenResult={openResult}
+          />
+        )}
+      </AnimatePresence>
     </>
+  );
+}
+
+function HeaderCreateSheet({
+  kind,
+  saving,
+  onClose,
+  onSubmit,
+  studentForm,
+  setStudentForm,
+  classForm,
+  setClassForm,
+  subjectForm,
+  setSubjectForm,
+  materialForm,
+  setMaterialForm,
+  certificateForm,
+  setCertificateForm,
+  topUpAmount,
+  setTopUpAmount,
+  classes,
+  subjects,
+}: {
+  kind: HeaderCreateKind;
+  saving: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  studentForm: any;
+  setStudentForm: Dispatch<SetStateAction<any>>;
+  classForm: any;
+  setClassForm: Dispatch<SetStateAction<any>>;
+  subjectForm: any;
+  setSubjectForm: Dispatch<SetStateAction<any>>;
+  materialForm: any;
+  setMaterialForm: Dispatch<SetStateAction<any>>;
+  certificateForm: any;
+  setCertificateForm: Dispatch<SetStateAction<any>>;
+  topUpAmount: number;
+  setTopUpAmount: Dispatch<SetStateAction<number>>;
+  classes: any[];
+  subjects: any[];
+}) {
+  const titleMap: Record<HeaderCreateKind, string> = {
+    student: "Add student",
+    class: "Create class",
+    subject: "Create subject",
+    material: "Create material",
+    certificate: "Create certificate",
+    "top-up": "Top up wallet",
+  };
+
+  return (
+    <ResponsiveSheet
+      title={titleMap[kind]}
+      onClose={onClose}
+      className={kind === "student" ? "md:max-w-3xl" : undefined}
+      footer={
+        <DashboardButton onClick={onSubmit} disabled={saving} className="w-full">
+          {saving ? "Saving..." : titleMap[kind]}
+        </DashboardButton>
+      }
+    >
+      {kind === "student" && (
+        <StudentQuickForm form={studentForm} setForm={setStudentForm} />
+      )}
+      {kind === "class" && (
+        <ClassQuickForm form={classForm} setForm={setClassForm} />
+      )}
+      {kind === "subject" && (
+        <SubjectQuickForm form={subjectForm} setForm={setSubjectForm} classes={classes} />
+      )}
+      {kind === "material" && (
+        <MaterialQuickForm form={materialForm} setForm={setMaterialForm} subjects={subjects} />
+      )}
+      {kind === "certificate" && (
+        <CertificateQuickForm form={certificateForm} setForm={setCertificateForm} />
+      )}
+      {kind === "top-up" && (
+        <DashboardField label="Amount">
+          <input
+            type="number"
+            min={1}
+            value={topUpAmount}
+            onChange={(event) => setTopUpAmount(Number(event.target.value))}
+            className={fieldClass}
+          />
+        </DashboardField>
+      )}
+    </ResponsiveSheet>
+  );
+}
+
+function StudentQuickForm({ form, setForm }: { form: any; setForm: Dispatch<SetStateAction<any>> }) {
+  const set = (key: string, value: any) => setForm((current: any) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {[
+        ["firstName", "First name"],
+        ["lastName", "Last name"],
+        ["email", "Email"],
+        ["phone", "Phone"],
+        ["studentId", "Student ID"],
+      ].map(([key, label]) => (
+        <DashboardField key={key} label={label}>
+          <input
+            value={form[key] ?? ""}
+            onChange={(event) => set(key, event.target.value)}
+            className={fieldClass}
+          />
+        </DashboardField>
+      ))}
+      <DashboardField label="Gender">
+        <DashboardSelect
+          value={form.gender}
+          onValueChange={(value) => set("gender", value)}
+          options={genderOptions.map((option) => ({ value: option, label: labelize(option) }))}
+        />
+      </DashboardField>
+      <DashboardField label="Level">
+        <DashboardSelect
+          value={form.level}
+          onValueChange={(value) => set("level", value)}
+          options={levelOptions.map((option) => ({ value: option, label: labelize(option) }))}
+        />
+      </DashboardField>
+      <DashboardField label="Guardian name">
+        <input
+          value={form.guardianName ?? ""}
+          onChange={(event) => set("guardianName", event.target.value)}
+          className={fieldClass}
+        />
+      </DashboardField>
+      <DashboardField label="Guardian phone">
+        <input
+          value={form.guardianPhone ?? ""}
+          onChange={(event) => set("guardianPhone", event.target.value)}
+          className={fieldClass}
+        />
+      </DashboardField>
+    </div>
+  );
+}
+
+function ClassQuickForm({ form, setForm }: { form: any; setForm: Dispatch<SetStateAction<any>> }) {
+  const set = (key: string, value: any) => setForm((current: any) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="space-y-4">
+      <DashboardField label="Name">
+        <input value={form.name} onChange={(event) => set("name", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Level">
+        <DashboardSelect
+          value={form.level}
+          onValueChange={(value) => set("level", value)}
+          options={levelOptions.map((option) => ({ value: option, label: labelize(option) }))}
+        />
+      </DashboardField>
+      <DashboardField label="Session">
+        <input value={form.session ?? ""} onChange={(event) => set("session", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Description">
+        <input value={form.description ?? ""} onChange={(event) => set("description", event.target.value)} className={fieldClass} />
+      </DashboardField>
+    </div>
+  );
+}
+
+function SubjectQuickForm({
+  form,
+  setForm,
+  classes,
+}: {
+  form: any;
+  setForm: Dispatch<SetStateAction<any>>;
+  classes: any[];
+}) {
+  const set = (key: string, value: any) => setForm((current: any) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="space-y-4">
+      <DashboardField label="Name">
+        <input value={form.name} onChange={(event) => set("name", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Code">
+        <input value={form.code} onChange={(event) => set("code", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Class">
+        <DashboardSelect
+          value={form.classListId}
+          onValueChange={(value) => set("classListId", value)}
+          placeholder="Select class"
+          options={classes.map((item) => ({ value: item.id, label: item.name }))}
+        />
+      </DashboardField>
+      <DashboardField label="Level">
+        <DashboardSelect
+          value={form.level}
+          onValueChange={(value) => set("level", value)}
+          options={levelOptions.map((option) => ({ value: option, label: labelize(option) }))}
+        />
+      </DashboardField>
+      <DashboardField label="Units">
+        <input type="number" min={1} value={form.unit} onChange={(event) => set("unit", Number(event.target.value))} className={fieldClass} />
+      </DashboardField>
+    </div>
+  );
+}
+
+function MaterialQuickForm({
+  form,
+  setForm,
+  subjects,
+}: {
+  form: any;
+  setForm: Dispatch<SetStateAction<any>>;
+  subjects: any[];
+}) {
+  const set = (key: string, value: any) => setForm((current: any) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="space-y-4">
+      <DashboardField label="Name">
+        <input value={form.name} onChange={(event) => set("name", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Subject">
+        <DashboardSelect
+          value={form.subjectId}
+          onValueChange={(value) => set("subjectId", value)}
+          placeholder="Select subject"
+          options={subjects.map((item) => ({ value: item.id, label: item.name }))}
+        />
+      </DashboardField>
+      <DashboardField label="Level">
+        <DashboardSelect
+          value={form.level}
+          onValueChange={(value) => set("level", value)}
+          options={levelOptions.map((option) => ({ value: option, label: labelize(option) }))}
+        />
+      </DashboardField>
+      <DashboardField label="Type">
+        <DashboardSelect
+          value={form.type}
+          onValueChange={(value) => set("type", value)}
+          options={materialTypeOptions.map((option) => ({ value: option, label: labelize(option) }))}
+        />
+      </DashboardField>
+    </div>
+  );
+}
+
+function CertificateQuickForm({ form, setForm }: { form: any; setForm: Dispatch<SetStateAction<any>> }) {
+  const set = (key: string, value: any) => setForm((current: any) => ({ ...current, [key]: value }));
+
+  return (
+    <div className="space-y-4">
+      <DashboardField label="Name">
+        <input value={form.name} onChange={(event) => set("name", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Description">
+        <input value={form.description ?? ""} onChange={(event) => set("description", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Issued by">
+        <input value={form.issuedBy ?? ""} onChange={(event) => set("issuedBy", event.target.value)} className={fieldClass} />
+      </DashboardField>
+      <DashboardField label="Issue date">
+        <input type="date" value={form.issuedAt ?? ""} onChange={(event) => set("issuedAt", event.target.value)} className={fieldClass} />
+      </DashboardField>
+    </div>
   );
 }
 
@@ -254,8 +685,19 @@ function DashboardSearchOverlay({
   onOpenResult: (result: DashboardSearchResult) => void;
 }) {
   return (
-    <div className="fixed inset-y-0 right-0 z-50 bg-black/35 p-3 lg:left-[220px]" onMouseDown={onClose}>
-      <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className="fixed inset-y-0 right-0 z-50 bg-black/35 p-3 lg:left-[220px]"
+      onMouseDown={onClose}
+    >
+      <motion.div
+        initial={{ y: -18, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: -18, opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto mt-20 flex max-h-[76dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] shadow-2xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -309,8 +751,8 @@ function DashboardSearchOverlay({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
   

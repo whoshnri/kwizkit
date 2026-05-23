@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "./components/Navbar";
 import Header from "./components/Header";
 
@@ -14,13 +15,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Sidebar />
       </aside>
 
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex bg-black/40 lg:hidden" onMouseDown={() => setSidebarOpen(false)}>
-          <div onMouseDown={(event) => event.stopPropagation()}>
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="fixed inset-0 z-50 flex bg-black/40 lg:hidden"
+            onMouseDown={() => setSidebarOpen(false)}
+          >
+            <motion.div
+              initial={{ x: -240 }}
+              animate={{ x: 0 }}
+              exit={{ x: -240 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
             <Sidebar mobile onClose={() => setSidebarOpen(false)} />
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="h-dvh min-w-0 overflow-y-auto lg:pl-[220px]">
         <Header onMenuClick={() => setSidebarOpen(true)} />

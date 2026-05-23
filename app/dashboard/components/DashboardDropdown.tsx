@@ -1,7 +1,7 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import type { ComponentPropsWithoutRef, ElementRef } from "react";
+import type { ComponentPropsWithoutRef, ElementRef, ReactNode } from "react";
 import { forwardRef, useMemo, useState } from "react";
 import { PiCaretDown, PiCaretRight, PiCheck, PiMagnifyingGlass } from "react-icons/pi";
 
@@ -136,6 +136,7 @@ function DashboardSelect({
   searchable = true,
   searchPlaceholder = "Search options...",
   maxMenuHeight = 260,
+  trigger,
 }: {
   value: string;
   options: DashboardSelectOption[];
@@ -146,6 +147,7 @@ function DashboardSelect({
   searchable?: boolean;
   searchPlaceholder?: string;
   maxMenuHeight?: number;
+  trigger?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -168,18 +170,24 @@ function DashboardSelect({
         if (!nextOpen) setQuery("");
       }}
     >
-      <DashboardDropdownTrigger asChild disabled={disabled}>
-        <button
-          type="button"
-          disabled={disabled}
-          className={`flex h-12 w-full items-center justify-between rounded-lg border border-[var(--border)] bg-white px-4 text-left text-sm text-[var(--rubric-black)] outline-none transition focus:border-[var(--rubric-black)] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
-        >
-          <span className={selected ? "" : "text-[var(--rubric-muted)]"}>
-            {selected?.label ?? placeholder}
-          </span>
-          <PiCaretDown className="h-4 w-4 text-[var(--rubric-muted)]" />
-        </button>
-      </DashboardDropdownTrigger>
+      {trigger ? (
+        <DashboardDropdownTrigger asChild disabled={disabled}>
+          {trigger}
+        </DashboardDropdownTrigger>
+      ) : (
+        <DashboardDropdownTrigger asChild disabled={disabled}>
+          <button
+            type="button"
+            disabled={disabled}
+            className={`flex h-12 w-full items-center justify-between rounded-lg border border-[var(--border)] bg-white px-4 text-left text-sm text-[var(--rubric-black)] outline-none transition focus:border-[var(--rubric-black)] disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+          >
+            <span className={selected ? "" : "text-[var(--rubric-muted)]"}>
+              {selected?.label ?? placeholder}
+            </span>
+            <PiCaretDown className="h-4 w-4 text-[var(--rubric-muted)]" />
+          </button>
+        </DashboardDropdownTrigger>
+      )}
       <DashboardDropdownContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)] p-0">
         {searchable && (
           <div className="border-b border-[var(--border)] p-2">

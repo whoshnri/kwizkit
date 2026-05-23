@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { PiMagnifyingGlass } from "react-icons/pi";
+import { PiMagnifyingGlass, PiPlus } from "react-icons/pi";
 import { useSession } from "@/app/SessionContext";
 import { Test } from "@/lib/test";
 import { fetchTests } from "@/app/actions/fetchUserTests";
@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import EmptyState from "./components/EmptyState";
 import DeleteModal from "./components/DeleteModal";
 import { deleteTest } from "@/app/actions/testOps";
-import { DashboardField, fieldClass } from "../components/primitives";
+import { DashboardButton, DashboardField, fieldClass } from "../components/primitives";
 import { DashboardSelect } from "../components/DashboardDropdown";
 
 function getSubjectName(test: Test) {
@@ -101,6 +101,13 @@ export default function TestList() {
 
   return (
     <div className="space-y-8 pb-6">
+      <div className="flex justify-start">
+        <DashboardButton onClick={() => setNewTestModalOpen(true)}>
+          <PiPlus className="h-5 w-5" />
+          New test
+        </DashboardButton>
+      </div>
+
       <section className="grid gap-4 lg:grid-cols-2">
         <DashboardField label="Search">
           <div className="relative">

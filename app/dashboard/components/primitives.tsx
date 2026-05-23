@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import { PiX } from "react-icons/pi";
+import Image from "next/image";
 
 export function DashboardPanel({
   children,
@@ -142,23 +144,36 @@ export function ResponsiveSheet({
   className?: string;
 }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center md:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div
+      <motion.div
+        initial={{ y: 28, opacity: 0, scale: 0.98 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 24, opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         className={`flex max-h-[92dvh] w-full flex-col rounded-t-[24px] border-t border-[var(--border)] bg-white px-[18px] pb-[18px] pt-3 md:max-w-xl md:rounded-2xl md:border md:p-6 ${className}`}
       >
         <div className="mb-5 flex w-full justify-center md:hidden">
           <div className="h-[5px] w-11 rounded-full bg-[#D8D3C8]" />
         </div>
-        <header className="mb-5 flex items-center justify-end">
+        <header className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-[var(--rubric-black)]">
+              {title}
+            </h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[var(--rubric-muted)] transition hover:text-[var(--rubric-black)]"
+            className="shrink-0 text-[var(--rubric-muted)] transition hover:text-[var(--rubric-black)]"
             aria-label="Close"
           >
             <PiX className="h-6 w-6" />
@@ -166,8 +181,8 @@ export function ResponsiveSheet({
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">{children}</div>
         {footer && <footer className="mt-auto pt-5">{footer}</footer>}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -185,13 +200,23 @@ export function ConfirmationDialog({
   onClose: () => void;
 }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
       className="fixed inset-0 z-50 flex items-center text-left justify-center bg-black/40 p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-white p-6">
+      <motion.div
+        initial={{ y: 16, opacity: 0, scale: 0.96 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 12, opacity: 0, scale: 0.96 }}
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-white p-6"
+      >
         <h2 className="text-xl font-semibold text-[var(--rubric-black)]">{title}</h2>
         {description && (
           <p className="mt-3 text-sm leading-6 text-[var(--rubric-slate)]">
@@ -200,7 +225,7 @@ export function ConfirmationDialog({
         )}
         {children && <div className="mt-5">{children}</div>}
         <div className="mt-6 flex gap-3">{footer}</div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
