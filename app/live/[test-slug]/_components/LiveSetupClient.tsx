@@ -205,7 +205,11 @@ export default function LiveSetupClient({ test }: { test: LiveTestPayload }) {
                   ready={micReady}
                   icon={<PiMicrophone className="h-6 w-6" />}
                 >
-                  {micReady ? <AudioPreview /> : <NoAccess label="Microphone access unavailable" />}
+                  {micReady && mediaStream ? (
+                    <AudioPreview stream={mediaStream} />
+                  ) : (
+                    <NoAccess label="Microphone access unavailable" />
+                  )}
                 </DeviceCard>
               </div>
               {mediaError && (
@@ -293,7 +297,7 @@ function DeviceCard({
           {icon}
           {title}
         </div>
-        <span
+        {/* <span
           className={`rounded-full border px-3 py-1 text-xs font-semibold ${
             ready
               ? "border-[rgba(47,107,79,0.25)] bg-[rgba(47,107,79,0.1)] text-[var(--rubric-success)]"
@@ -301,7 +305,7 @@ function DeviceCard({
           }`}
         >
           {ready ? "Preview" : "No access"}
-        </span>
+        </span> */}
       </div>
       <div className="h-56 overflow-hidden rounded-2xl border border-[var(--border)] bg-[#1f2328]">
         {children}
@@ -319,23 +323,81 @@ function NoAccess({ label }: { label: string }) {
   );
 }
 
-function AudioPreview() {
-  const bars = [28, 52, 36, 78, 44, 66, 30, 58, 84, 40, 62, 34];
+function AudioPreview({ stream }: { stream: MediaStream }) {
+  const [levels, setLevels] = useState(() =>
+    Array.from({ length: 22 }, (_, index) => 28 + Math.sin(index) * 10)
+  );
+  const [inputLevel, setInputLevel] = useState(0);
+
+  useEffect(() => {
+    const context = new AudioContext();
+    const source = context.createMediaStreamSource(stream);
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.82;
+    source.connect(analyser);
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    let frame = 0;
+    let animationFrame = 0;
+
+    const update = () => {
+      analyser.getByteFrequencyData(data);
+
+      const barCount = 22;
+      let total = 0;
+      const nextLevels = Array.from({ length: barCount }, (_, index) => {
+        const bucketStart = Math.floor((index / barCount) * data.length);
+        const bucketEnd = Math.floor(((index + 1) / barCount) * data.length);
+        const values = data.slice(bucketStart, Math.max(bucketStart + 1, bucketEnd));
+        const bucket =
+          values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+
+        const idlePulse = 0.18 + Math.sin(frame / 12 + index * 0.65) * 0.055;
+        const normalized = Math.max(bucket / 255, idlePulse);
+        total += bucket;
+
+        return Math.max(32, Math.round(normalized * 132));
+      });
+
+      if (frame % 3 === 0) {
+        setLevels(nextLevels);
+        const level = Math.min(100, Math.round((total / barCount / 255) * 140));
+        setInputLevel(level);
+      }
+
+      frame += 1;
+      animationFrame = requestAnimationFrame(update);
+    };
+
+    void context.resume();
+    update();
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      source.disconnect();
+      analyser.disconnect();
+      void context.close();
+    };
+  }, [stream]);
 
   return (
-    <div className="flex h-full flex-col justify-center p-6">
-      <div className="flex h-28 items-end justify-center gap-3 rounded-2xl bg-[#FAF8F3] p-5">
-        {bars.map((height, index) => (
+    <div className="flex h-full flex-col justify-center p-5">
+      <div
+        className="flex h-36 w-full items-end justify-center gap-2"
+        aria-label="Live microphone frequency spectrum"
+      >
+        {levels.map((height, index) => (
           <span
             key={index}
-            className="w-3 rounded-full bg-[var(--rubric-black)]"
+            className="w-3.5 rounded-full bg-white shadow-[0_0_18px_rgba(255,255,255,0.25)]"
             style={{ height }}
           />
         ))}
       </div>
       <div className="mt-4 flex items-center justify-between text-sm text-white/75">
-        <span>Input level</span>
-        <span>-18 dB</span>
+        <span>Frequency intake</span>
+        <span>{inputLevel}%</span>
       </div>
     </div>
   );

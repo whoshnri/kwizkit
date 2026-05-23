@@ -146,7 +146,7 @@ export default function AccountPageClient() {
           </div>
         </ResponsiveSheet>
       )}
-        <DashboardPanel className="p-6">
+        {/* <DashboardPanel className="p-6">
           <p className="mb-5 text-sm font-semibold text-[var(--rubric-muted)]">Related models</p>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {account.usageCards.map(([label, value]) => (
@@ -156,7 +156,7 @@ export default function AccountPageClient() {
               </div>
             ))}
           </div>
-        </DashboardPanel>
+        </DashboardPanel> */}
 
         <DashboardPanel className="p-6">
           <p className="mb-5 text-sm font-semibold text-[var(--rubric-muted)]">Recent transactions</p>

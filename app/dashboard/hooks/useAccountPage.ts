@@ -9,8 +9,9 @@ import {
   topUpWallet,
   updateAccount,
 } from "@/app/actions/accountOps";
-import { updateUserPlan, PLAN_CONFIG } from "@/app/actions/planOps";
+import { updateUserPlan } from "@/app/actions/planOps";
 import { Plan } from "@/lib/generated/prisma/client";
+import { PLAN_CONFIG } from "@/lib/plans";
 
 export function useAccountPage() {
   const { session, refreshSession } = useSession();

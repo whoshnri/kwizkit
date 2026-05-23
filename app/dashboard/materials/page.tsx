@@ -1,10 +1,8 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PiPencilSimple, PiPlus, PiTrash } from "react-icons/pi";
-import DashboardDataTable from "../components/DashboardDataTable";
+import { PiFileText, PiPlus, PiTrash } from "react-icons/pi";
 import {
   ConfirmationDialog,
   DashboardButton,
@@ -26,7 +24,7 @@ import {
   materialTypeOptions,
 } from "../lib/schoolOptions";
 import { DashboardSelect } from "../components/DashboardDropdown";
-import { PenNibIcon } from "@phosphor-icons/react";
+import { PenNibIcon, StackIcon } from "@phosphor-icons/react";
 
 const emptyMaterial = {
   name: "",
@@ -85,65 +83,6 @@ export default function MaterialsPage() {
     }
   }
 
-  const columns = useMemo<ColumnDef<any>[]>(
-    () => [
-      {
-        accessorKey: "name",
-        header: "Material",
-        cell: ({ row }) => (
-          <span className="font-semibold text-[var(--rubric-black)]">
-            {row.original.name}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "subject.name",
-        header: "Subject",
-        cell: ({ row }) => row.original.subject?.name ?? "Not set",
-      },
-      {
-        accessorKey: "type",
-        header: "Type",
-        cell: ({ row }) => labelize(row.original.type),
-      },
-      {
-        accessorKey: "level",
-        header: "Level",
-        cell: ({ row }) => labelize(row.original.level),
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }) => formatDate(row.original.createdAt),
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                setEditingId(row.original.id);
-                setForm(toMaterialForm(row.original));
-                setSheetOpen(true);
-              }}
-              className="rounded-full border border-[var(--border)] p-2"
-            >
-              <PenNibIcon size={20} />
-            </button>
-            <button
-              onClick={() => setDeleteId(row.original.id)}
-              className="rounded-full border border-[rgba(180,35,24,0.22)] p-2 text-[var(--rubric-danger)]"
-            >
-              <PiTrash size={20} />
-            </button>
-          </div>
-        ),
-      },
-    ],
-    [],
-  );
-
   if (loading) return <DashboardPanel className="h-96 animate-pulse" />;
 
   return (
@@ -160,11 +99,36 @@ export default function MaterialsPage() {
           <PiPlus className="h-5 w-5" /> New material
         </DashboardButton>
       </header>
-      <DashboardDataTable
-        data={data.materials ?? []}
-        columns={columns}
-        searchPlaceholder="Search materials..."
-      />
+
+      {(data.materials ?? []).length ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {(data.materials ?? []).map((material: any) => (
+            <MaterialCard
+              key={material.id}
+              material={material}
+              onEdit={() => {
+                setEditingId(material.id);
+                setForm(toMaterialForm(material));
+                setSheetOpen(true);
+              }}
+              onDelete={() => setDeleteId(material.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <DashboardPanel className="flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FAF8F3] text-[var(--rubric-black)]">
+            <StackIcon size={26} />
+          </div>
+          <h2 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-[var(--rubric-black)]">
+            No materials yet
+          </h2>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--rubric-slate)]">
+            Add lesson notes, documents, videos, or reference files and attach
+            them to the subject they support.
+          </p>
+        </DashboardPanel>
+      )}
 
       {sheetOpen && (
         <ResponsiveSheet
@@ -215,6 +179,96 @@ export default function MaterialsPage() {
       )}
     </div>
   );
+}
+
+function MaterialCard({
+  material,
+  onEdit,
+  onDelete,
+}: {
+  material: any;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const files = parseFiles(material.files);
+
+  return (
+    <DashboardPanel className="flex min-h-[260px] flex-col overflow-hidden p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FAF8F3] text-[var(--rubric-black)]">
+            <PiFileText className="h-6 w-6" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--rubric-muted)]">
+              {labelize(material.type)}
+            </p>
+            <h2 className="mt-2 line-clamp-2 text-xl font-semibold tracking-[-0.02em] text-[var(--rubric-black)]">
+              {material.name}
+            </h2>
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            onClick={onEdit}
+            className="rounded-full border border-[var(--border)] bg-white p-2 text-[var(--rubric-black)] transition hover:bg-[#FAF8F3]"
+            aria-label={`Edit ${material.name}`}
+          >
+            <PenNibIcon size={18} />
+          </button>
+          <button
+            onClick={onDelete}
+            className="rounded-full border border-[rgba(180,35,24,0.22)] bg-white p-2 text-[var(--rubric-danger)] transition hover:bg-[rgba(180,35,24,0.08)]"
+            aria-label={`Delete ${material.name}`}
+          >
+            <PiTrash size={18} />
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-2">
+        <InfoPill label="Subject" value={material.subject?.name ?? "Not set"} />
+        <InfoPill label="Level" value={labelize(material.level)} />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[#FAF8F3] p-3">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--rubric-muted)]">
+          Files
+        </p>
+        <p className="mt-2 text-sm font-semibold text-[var(--rubric-black)]">
+          {files.length ? `${files.length} uploaded file${files.length === 1 ? "" : "s"}` : "No file attached"}
+        </p>
+      </div>
+
+      <div className="mt-auto pt-5 text-xs font-medium text-[var(--rubric-muted)]">
+        Created {formatDate(material.createdAt)}
+      </div>
+    </DashboardPanel>
+  );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--rubric-muted)]">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-sm font-semibold text-[var(--rubric-black)]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function parseFiles(files: unknown) {
+  if (Array.isArray(files)) return files;
+  if (typeof files !== "string") return [];
+  try {
+    const parsed = JSON.parse(files);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 function MaterialForm({

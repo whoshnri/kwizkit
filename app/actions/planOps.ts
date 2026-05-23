@@ -3,8 +3,8 @@
 import prisma from "@/lib/prisma";
 import { Plan } from "@/lib/generated/prisma/client";
 import { revalidatePath } from "next/cache";
-export { PLAN_CONFIG } from "@/lib/plans";
 import { PLAN_CONFIG } from "@/lib/plans";
+
 
 export async function updateUserPlan(userId: string, plan: Plan) {
   try {

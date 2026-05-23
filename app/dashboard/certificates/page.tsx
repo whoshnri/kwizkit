@@ -1,16 +1,13 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
-  PiPencilSimple,
+  PiCertificate,
   PiPlus,
   PiTrash,
-  PiUserPlus,
   PiX,
 } from "react-icons/pi";
-import DashboardDataTable from "../components/DashboardDataTable";
 import {
   ConfirmationDialog,
   DashboardButton,
@@ -30,7 +27,7 @@ import { useSchoolResource } from "../hooks/useSchoolResource";
 import { formatDate } from "../lib/schoolOptions";
 import { DashboardSelect } from "../components/DashboardDropdown";
 import { useSession } from "@/app/SessionContext";
-import { PenNibIcon, UserPlusIcon } from "@phosphor-icons/react";
+import { PenNibIcon, SealCheckIcon, UserPlusIcon } from "@phosphor-icons/react";
 
 const emptyCertificate = {
   name: "",
@@ -86,64 +83,6 @@ export default function CertificatesPage() {
     }
   }
 
-  const columns = useMemo<ColumnDef<any>[]>(
-    () => [
-      {
-        accessorKey: "name",
-        header: "Certificate",
-        cell: ({ row }) => (
-          <span className="font-semibold text-[var(--rubric-black)]">
-            {row.original.name}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "issuedBy",
-        header: "Issued by",
-        cell: ({ row }) => row.original.issuedBy || "Not set",
-      },
-      {
-        accessorKey: "issuedAt",
-        header: "Issue date",
-        cell: ({ row }) => formatDate(row.original.issuedAt),
-      },
-      {
-        id: "students",
-        header: "Students",
-        cell: ({ row }) => row.original.students?.length ?? 0,
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <button
-              onClick={() => setManageCertificate(row.original)}
-              className="rounded-full text-base border border-[var(--border)] p-2"
-            >
-              <UserPlusIcon size={20}/>
-            </button>
-            <button
-              onClick={() =>
-                page.openEdit(row.original.id, toCertificateForm(row.original))
-              }
-              className="rounded-full text-base border border-[var(--border)] p-2"
-            >
-              <PenNibIcon size={20} />
-            </button>
-            <button
-              onClick={() => page.setDeleteId(row.original.id)}
-              className="rounded-full text-base border border-[rgba(180,35,24,0.22)] p-2 text-[var(--rubric-danger)]"
-            >
-              <PiTrash size={20} />
-            </button>
-          </div>
-        ),
-      },
-    ],
-    [page],
-  );
-
   if (page.loading) return <DashboardPanel className="h-96 animate-pulse" />;
 
   return (
@@ -153,11 +92,33 @@ export default function CertificatesPage() {
           <PiPlus className="h-5 w-5" /> New certificate
         </DashboardButton>
       </header>
-      <DashboardDataTable
-        data={certificates}
-        columns={columns}
-        searchPlaceholder="Search certificates..."
-      />
+
+      {certificates.length ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {certificates.map((certificate: any) => (
+            <CertificateCard
+              key={certificate.id}
+              certificate={certificate}
+              onAssign={() => setManageCertificate(certificate)}
+              onEdit={() => page.openEdit(certificate.id, toCertificateForm(certificate))}
+              onDelete={() => page.setDeleteId(certificate.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <DashboardPanel className="flex min-h-[320px] flex-col items-center justify-center p-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FAF8F3] text-[var(--rubric-black)]">
+            <SealCheckIcon size={28} />
+          </div>
+          <h2 className="mt-5 text-2xl font-semibold tracking-[-0.02em] text-[var(--rubric-black)]">
+            No certificates yet
+          </h2>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--rubric-slate)]">
+            Create certificate records and assign them to students after
+            completion, mastery, or institutional review.
+          </p>
+        </DashboardPanel>
+      )}
 
       {page.sheetOpen && (
         <ResponsiveSheet
@@ -259,6 +220,100 @@ export default function CertificatesPage() {
           }
         />
       )}
+    </div>
+  );
+}
+
+function CertificateCard({
+  certificate,
+  onAssign,
+  onEdit,
+  onDelete,
+}: {
+  certificate: any;
+  onAssign: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const assignedCount = certificate.students?.length ?? 0;
+
+  return (
+    <DashboardPanel className="relative flex min-h-[288px] flex-col overflow-hidden p-5">
+      <div className="pointer-events-none absolute right-[-38px] top-[-38px] h-32 w-32 rounded-full border border-[var(--border)] bg-[#FAF8F3]" />
+      <div className="relative flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--rubric-black)] text-white">
+            <PiCertificate className="h-6 w-6" />
+          </div>
+          <div className="min-w-0">
+          
+            <h2 className="mt-2 line-clamp-2 text-xl font-semibold tracking-[-0.02em] text-[var(--rubric-black)]">
+              {certificate.name}
+            </h2>
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            onClick={onAssign}
+            className="rounded-full border border-[var(--border)] bg-white p-2 text-[var(--rubric-black)] transition hover:bg-[#FAF8F3]"
+            aria-label={`Assign ${certificate.name}`}
+          >
+            <UserPlusIcon size={18} />
+          </button>
+          <button
+            onClick={onEdit}
+            className="rounded-full border border-[var(--border)] bg-white p-2 text-[var(--rubric-black)] transition hover:bg-[#FAF8F3]"
+            aria-label={`Edit ${certificate.name}`}
+          >
+            <PenNibIcon size={18} />
+          </button>
+          <button
+            onClick={onDelete}
+            className="rounded-full border border-[rgba(180,35,24,0.22)] bg-white p-2 text-[var(--rubric-danger)] transition hover:bg-[rgba(180,35,24,0.08)]"
+            aria-label={`Delete ${certificate.name}`}
+          >
+            <PiTrash size={18} />
+          </button>
+        </div>
+      </div>
+
+      {certificate.description && (
+        <p className="relative mt-4 line-clamp-2 text-sm leading-6 text-[var(--rubric-slate)]">
+          {certificate.description}
+        </p>
+      )}
+
+      <div className="relative mt-5 grid grid-cols-2 gap-2">
+        <CertificateInfo label="Issued by" value={certificate.issuedBy || "Not set"} />
+        <CertificateInfo label="Issue date" value={formatDate(certificate.issuedAt)} />
+      </div>
+
+      <div className="relative mt-4 rounded-2xl border border-[var(--border)] bg-[#FAF8F3] p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--rubric-muted)]">
+              Assigned students
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-[var(--rubric-black)]">
+              {assignedCount}
+            </p>
+          </div>
+          <SealCheckIcon size={28} className="text-[var(--rubric-muted)]" />
+        </div>
+      </div>
+    </DashboardPanel>
+  );
+}
+
+function CertificateInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+      <p className="text-[11px] font-bold uppercase text-[var(--rubric-muted)]">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-sm font-semibold text-[var(--rubric-black)]">
+        {value}
+      </p>
     </div>
   );
 }
