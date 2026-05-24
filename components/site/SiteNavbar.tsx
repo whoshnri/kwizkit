@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, ChevronRight, Menu, X } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { RubricButton } from "./RubricButton";
 import { useSession } from "@/app/SessionContext";
 
@@ -27,30 +27,21 @@ export function SiteNavbar({
   secondaryAction,
 }: SiteNavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const prevOverflowRef = useRef<string>("");
   const desktopLinks = useMemo(() => links, [links]);
   const { session } = useSession();
 
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout> | undefined;
-
-    if (mobileOpen) {
-      prevOverflowRef.current = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      setMounted(true);
-    } else if (mounted) {
-      // keep mounted during exit animation
-      t = setTimeout(() => {
-        document.body.style.overflow = prevOverflowRef.current || "";
-        setMounted(false);
-      }, 320);
+    if (!mobileOpen) {
+      return;
     }
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     return () => {
-      if (t) clearTimeout(t);
+      document.body.style.overflow = previousOverflow;
     };
-  }, [mobileOpen, mounted]);
+  }, [mobileOpen]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/92 backdrop-blur-sm">
@@ -108,24 +99,33 @@ export function SiteNavbar({
         </button>
       </div>
 
-      {mounted && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+      <AnimatePresence>
+        {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: mobileOpen ? 1 : 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            aria-hidden={!mobileOpen}
-            className="absolute inset-0 bg-black/20"
-            onClick={() => setMobileOpen(false)}
-          />
-
-          <motion.div
-            id="mobile-navigation"
-            initial={{ y: "-100%" }}
-            animate={{ y: mobileOpen ? 0 : "-100%" }}
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed left-0 right-0 top-0 flex h-[100dvh] flex-col bg-white px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-6"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 1 }}
+            className="fixed inset-0 z-50 lg:hidden"
+            role="dialog"
+            aria-modal="true"
           >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="absolute inset-0 bg-black/20"
+              onClick={() => setMobileOpen(false)}
+            />
+
+            <motion.div
+              id="mobile-navigation"
+              initial={{ y: "-100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-100%" }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed left-0 right-0 top-0 flex h-[100dvh] flex-col bg-white px-4 pb-4 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-6"
+            >
             <div className="flex items-center justify-between gap-4">
               <Link href={logoHref} className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
                 <Image src="/logo.svg" alt="Rubric" width={28} height={28} style={{ height: "auto" }} />
@@ -196,9 +196,10 @@ export function SiteNavbar({
                 </Link>
               </div>
             </div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </header>
   );
 }
