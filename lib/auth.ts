@@ -5,7 +5,7 @@ import { dash, sentinel } from "@better-auth/infra";
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
-  plugins: [nextCookies(), dash(), sentinel()],
+  plugins: [dash(), sentinel(), nextCookies()],
   emailAndPassword: {
     enabled: true,
   },
