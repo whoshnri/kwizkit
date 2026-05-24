@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "tsc --noEmit"
   },
@@ -15,8 +15,8 @@
     "@gsap/react": "^2.1.2",
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
-    "@langchain/core": "^1.0.3",
-    "@langchain/google-genai": "^1.0.0",
+    "@langchain/core": "^1.1.44",
+    "@langchain/google-genai": "^1.0.3",
     "@langchain/langgraph": "^1.0.1",
     "@langchain/openai": "^1.0.0",
     "@mui/icons-material": "^9.0.1",
